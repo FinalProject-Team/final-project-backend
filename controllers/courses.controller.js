@@ -27,8 +27,11 @@ export const getSingleCourse = async (req, res) => {
         .single();
 
     if (error) {
-        return res.status(500).json({ error: error.message });
-    }
+        console.log(error);
 
+        return res.status(500).json({
+            error: error.message
+        });
+    }
     res.json(data);
 };
