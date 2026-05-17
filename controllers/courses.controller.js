@@ -1,5 +1,5 @@
 import { fetchCourses } from "../services/courses.service.js";
-
+import supabase from "../config/supabase.js";
 export const getCourses = async (req, res) => {
 
     try {
