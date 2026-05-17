@@ -1,21 +1,48 @@
 import { fetchCourses } from "../services/courses.service.js";
 import supabase from "../config/supabase.js";
-export const getCourses = async (req, res) => {
+// export const getCourses = async (req, res) => {
 
+//     try {
+
+//         const data = await fetchCourses();
+
+//         res.json(data);
+
+//     } catch (error) {
+
+//         res.status(500).json({
+//             error: error.message
+//         });
+
+//     }
+// };
+
+export const getCourses = async (req, res) => {
     try {
 
-        const data = await fetchCourses();
+        const search = req.query.search;
+
+        let query = supabase
+            .from("courses")
+            .select("*");
+
+        if (search) {
+            query = query.ilike("title", `%${search}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
 
         res.json(data);
 
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 };
+
 
 export const getSingleCourse = async (req, res) => {
     const { id } = req.params;
