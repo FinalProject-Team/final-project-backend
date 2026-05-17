@@ -22,10 +22,7 @@ export const getSingleCourse = async (req, res) => {
 
     const { data, error } = await supabase
         .from("courses")
-        .select(`
-            *,
-            tracks(title)
-        `)
+        .select("*")
         .eq("id", id)
         .single();
 
