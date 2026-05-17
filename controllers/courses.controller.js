@@ -77,3 +77,24 @@ export const updateCourse = async (req, res) => {
     res.json(data);
 
 };
+
+export const deleteCourse = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data, error } = await supabase
+            .from("courses")
+            .delete()
+            .eq("id", id)
+            .select();
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json(data);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
