@@ -55,3 +55,25 @@ export const createCourse = async (req, res) => {
     res.status(201).json(data);
 
 };
+
+export const updateCourse = async (req, res) => {
+
+    const { id } = req.params;
+
+    const updatedData = req.body;
+
+    const { data, error } = await supabase
+        .from("courses")
+        .update(updatedData)
+        .eq("id", id)
+        .select();
+
+    if (error) {
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+
+    res.json(data);
+
+};
