@@ -36,3 +36,22 @@ export const getSingleCourse = async (req, res) => {
 
     res.json(data);
 };
+
+export const createCourse = async (req, res) => {
+
+    const courseData = req.body;
+
+    const { data, error } = await supabase
+        .from("courses")
+        .insert([courseData])
+        .select();
+
+    if (error) {
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+
+    res.status(201).json(data);
+
+};
