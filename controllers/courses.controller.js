@@ -63,22 +63,22 @@ export const getCourses = async (req, res) => {
             .select("*")
             .range(from, to);
 
-        // 🔍 Search
+        //  Search
         if (search) {
             query = query.ilike("title", `%${search}%`);
         }
 
-        // 📚 Category filter
+        //  Category filter
         if (category) {
             query = query.eq("category", category);
         }
 
-        // 💰 Price filter
+        //  Price filter
         if (price) {
             query = query.eq("price", price);
         }
 
-        // 🎯 Level filter
+        //  Level filter
         if (level) {
             query = query.eq("level", level);
         }

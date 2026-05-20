@@ -5,6 +5,10 @@
  *   description: Courses API
  */
 import express from "express";
+import { protect } from "../middlewares/auth.middleware.js";
+import { authorize } from "../middlewares/authorize.middleware.js";
+import { getCourseLessons } from "../controllers/lessons.controller.js";
+import { checkEnrollment } from "../middlewares/checkEnrollment.js";
 
 import {
     getCourses,
@@ -44,7 +48,17 @@ const router = express.Router();
  *       200:
  *         description: Success
  */
+
 router.get("/", getCourses);
+
+// router.get("/:id/lessons", getCourseLessons);
+router.get(
+    "/:id/lessons",
+    protect,
+    checkEnrollment,
+    getCourseLessons
+);
+
 /**
  * @swagger
  * /api/courses/{id}:
@@ -63,7 +77,10 @@ router.get("/", getCourses);
  *       404:
  *         description: Not found
  */
+
 router.get("/:id", getSingleCourse);
+
+
 /**
  * @swagger
  * /api/courses:
@@ -83,7 +100,14 @@ router.get("/:id", getSingleCourse);
  *       201:
  *         description: Created
  */
-router.post("/", createCourse);
+// router.post("/", createCourse);
+
+router.post(
+    "/",
+    protect,
+    authorize("admin", "instructor"),
+    createCourse
+);
 /**
  * @swagger
  * /api/courses/{id}:
@@ -109,7 +133,13 @@ router.post("/", createCourse);
  *       200:
  *         description: Updated
  */
-router.put("/:id", updateCourse);
+// router.put("/:id", updateCourse);
+router.put(
+    "/:id",
+    protect,
+    authorize("admin", "instructor"),
+    updateCourse
+);
 /**
  * @swagger
  * /api/courses/{id}:
@@ -126,5 +156,11 @@ router.put("/:id", updateCourse);
  *       200:
  *         description: Deleted
  */
-router.delete("/:id", deleteCourse);
+// router.delete("/:id", deleteCourse);
+router.delete(
+    "/:id",
+    protect,
+    authorize("admin"),
+    deleteCourse
+);
 export default router;
