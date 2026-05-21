@@ -11,7 +11,6 @@ const options = {
         },
         servers: [
             {
-                // ديناميكي: هيقرأ رابط الـ Replit لما ترفعه، وهيقرأ اللوكال وأنت شغال بجهازك
                 url: "/",
                 description: "Current Host Server"
             },
@@ -30,7 +29,6 @@ const options = {
             },
         },
     },
-    // التعديل هنا: يقرأ أي ملف .js مباشرة أو داخل فولدرات فرعية جوة routes
     apis: ["./routes/*.js", "./routes/**/*.js"],
 };
 

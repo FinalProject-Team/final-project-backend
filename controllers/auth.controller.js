@@ -3,11 +3,18 @@ import supabase, { supabaseAdmin } from "../config/supabase.js";
 export const register = async (req, res) => {
     try {
 
-        const { email, password, full_name } = req.body;
+        const { email, password, full_name, phone, confirmPassword } = req.body;
 
-        if (!email || !password || !full_name) {
+        if (!email || !password || !full_name || !phone || !confirmPassword) {
             return res.status(400).json({
                 message: "All fields are required"
+            });
+        }
+
+        // check passwords match
+        if (password !== confirmPassword) {
+            return res.status(400).json({
+                message: "Passwords do not match"
             });
         }
 
@@ -24,21 +31,13 @@ export const register = async (req, res) => {
             });
         }
 
-        // create profile
-        // const { error: profileError } = await supabase
-        //     .from("profiles")
-        //     .insert([
-        //         {
-        //             id: data.user.id,
-        //             full_name
-        //         }
-        //     ]);
         const { error: profileError } = await supabaseAdmin
             .from("profiles")
             .insert([
                 {
                     id: data.user.id,
-                    full_name
+                    full_name,
+                    phone
                 }
             ]);
 
