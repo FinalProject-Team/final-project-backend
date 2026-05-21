@@ -11,11 +11,27 @@ const options = {
         },
         servers: [
             {
-                url: "https://final-project-backend-production-5fe7.up.railway.app",
+                // ديناميكي: هيقرأ رابط الـ Replit لما ترفعه، وهيقرأ اللوكال وأنت شغال بجهازك
+                url: "/",
+                description: "Current Host Server"
             },
+            {
+                url: "https://9126c98e-e2e1-4608-8843-5de80d6148b8-00-12rx1cwtt852y.spock.replit.dev",
+                description: "Replit Production"
+            }
         ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
     },
-    apis: ["./routes/*.js"],
+    // التعديل هنا: يقرأ أي ملف .js مباشرة أو داخل فولدرات فرعية جوة routes
+    apis: ["./routes/*.js", "./routes/**/*.js"],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

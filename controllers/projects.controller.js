@@ -157,3 +157,120 @@ export const getSingleProject = async (req, res) => {
 
     }
 };
+
+export const updateProject = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const userId = req.user.id;
+
+        const {
+            title,
+            description,
+            github_link,
+            live_demo,
+            status,
+            completion_percentage,
+            image_url,
+            technologies,
+            category,
+            stars
+        } = req.body;
+
+        // check project owner
+        const { data: existingProject } = await supabaseAdmin
+            .from("projects")
+            .select("*")
+            .eq("id", id)
+            .eq("user_id", userId)
+            .single();
+
+        if (!existingProject) {
+            return res.status(404).json({
+                error: "Project not found or unauthorized"
+            });
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from("projects")
+            .update({
+                title,
+                description,
+                github_link,
+                live_demo,
+                status,
+                completion_percentage,
+                image_url,
+                technologies,
+                category,
+                stars
+            })
+            .eq("id", id)
+            .select()
+            .single();
+
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            });
+        }
+
+        res.status(200).json({
+            message: "Project updated successfully",
+            project: data
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        });
+
+    }
+};
+
+export const deleteProject = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const userId = req.user.id;
+
+        // check project owner
+        const { data: existingProject } = await supabaseAdmin
+            .from("projects")
+            .select("*")
+            .eq("id", id)
+            .eq("user_id", userId)
+            .single();
+
+        if (!existingProject) {
+            return res.status(404).json({
+                error: "Project not found or unauthorized"
+            });
+        }
+
+        const { error } = await supabaseAdmin
+            .from("projects")
+            .delete()
+            .eq("id", id);
+
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            });
+        }
+
+        res.status(200).json({
+            message: "Project deleted successfully"
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        });
+
+    }
+};

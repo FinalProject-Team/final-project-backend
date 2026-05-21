@@ -64,7 +64,6 @@ export const register = async (req, res) => {
 
 
 export const login = async (req, res) => {
-
     try {
 
         const { email, password } = req.body;
@@ -134,59 +133,6 @@ export const getMe = async (req, res) => {
 };
 
 
-// export const updateProfile = async (req, res) => {
-
-
-//     console.log("BODY:", req.body);
-//     try {
-
-//         const userId = req.user.id;
-
-//         const {
-//             full_name,
-//             bio,
-//             job_title,
-//             portfolio,
-//             username,
-//             headline,
-//             avatar_url
-//         } = req.body;
-
-//         const { data, error } = await supabase
-//             .from("profiles")
-//             .update({
-//                 full_name,
-//                 bio,
-//                 job_title,
-//                 portfolio,
-//                 username,
-//                 headline,
-//                 avatar_url
-//             })
-//             .eq("id", userId)
-//             .select()
-//             .maybeSingle();
-
-//         if (error) {
-//             return res.status(400).json({
-//                 error: error.message
-//             });
-//         }
-
-//         res.status(200).json({
-//             message: "Profile updated successfully",
-//             profile: data
-//         });
-
-//     } catch (error) {
-
-//         res.status(500).json({
-//             error: error.message
-//         });
-
-//     }
-
-// };
 
 
 
