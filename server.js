@@ -8,7 +8,7 @@ import enrollmentsRoutes from "./routes/enrollments.routes.js";
 import progressRoutes from "./routes/progress.routes.js";
 import jobsRoutes from "./routes/jobs.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
-
+import rankingRoutes from "./routes/ranking.routes.js";
 import { setupSwagger } from "./config/swagger.js";
 
 dotenv.config();
@@ -30,6 +30,7 @@ app.use("/api/enrollments", enrollmentsRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/jobs", jobsRoutes);
 app.use("/api/projects", projectsRoutes);
+app.use("/api/ranking", rankingRoutes);
 
 // Swagger
 setupSwagger(app);

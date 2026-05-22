@@ -3,6 +3,7 @@ import supabase, { supabaseAdmin } from "../config/supabase.js";
 
 export const completeLesson = async (req, res) => {
     try {
+
         const { id } = req.params;
         const userId = req.user.id;
 
@@ -14,7 +15,9 @@ export const completeLesson = async (req, res) => {
             .single();
 
         if (!lesson) {
-            return res.status(404).json({ error: "Lesson not found" });
+            return res.status(404).json({
+                error: "Lesson not found"
+            });
         }
 
         // check enrollment
@@ -58,31 +61,41 @@ export const completeLesson = async (req, res) => {
             .single();
 
         if (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({
+                error: error.message
+            });
         }
 
         // XP only first time
         if (!alreadyCompleted) {
+
             const { data: profile } = await supabaseAdmin
                 .from("profiles")
-                .select("xp_points")
+                .select("xp_points, weekly_xp")
                 .eq("id", userId)
                 .single();
 
             await supabaseAdmin
                 .from("profiles")
                 .update({
-                    xp_points: (profile?.xp_points || 0) + 50
+                    xp_points: (profile?.xp_points || 0) + 50,
+                    weekly_xp: (profile?.weekly_xp || 0) + 50
                 })
                 .eq("id", userId);
+
         }
 
         res.status(200).json({
             message: "Lesson completed",
             progress: data
         });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+
+        res.status(500).json({
+            error: error.message
+        });
+
     }
 };
 
@@ -119,28 +132,29 @@ export const getMyProgress = async (req, res) => {
 
 export const getDashboardStats = async (req, res) => {
     try {
+
         const userId = req.user.id;
 
         // 1. courses
         const { data: enrollments } = await supabaseAdmin
             .from("enrollments")
             .select(`
-                    course_id,
-                    courses (
+                course_id,
+                courses (
                     id,
                     title
-                    )
-                `)
+                )
+            `)
             .eq("user_id", userId);
-        const courses = enrollments.map(e => e.courses)
 
+        const courses = enrollments.map(e => e.courses);
 
         // 2. lessons
         const { data: lessons } = await supabaseAdmin
             .from("lessons")
             .select("id, course_id");
 
-        // 3. progress (مع ترتيب عشان نجيب آخر lesson)
+        // 3. progress
         const { data: progress } = await supabaseAdmin
             .from("lesson_progress")
             .select("lesson_id, updated_at")
@@ -148,8 +162,8 @@ export const getDashboardStats = async (req, res) => {
             .eq("is_completed", true)
             .order("updated_at", { ascending: false });
 
-        // const completedLessonIds = progress.map(p => p.lesson_id);
-        const completedLessonIds = progress?.map(p => p.lesson_id) || [];
+        const completedLessonIds =
+            progress?.map(p => p.lesson_id) || [];
 
         const result = courses.map(course => {
 
@@ -165,34 +179,44 @@ export const getDashboardStats = async (req, res) => {
 
             const completed = completedLessons.length;
 
-            // 🧠 آخر lesson معمول له complete داخل نفس الكورس
-            const lastLesson = completedLessons.length > 0
-                ? completedLessons[0].id
-                : null;
+            const lastLesson =
+                completedLessons.length > 0
+                    ? completedLessons[0].id
+                    : null;
 
             return {
                 course_id: course.id,
                 course_title: course.title,
                 total,
                 completed,
-                progress: total === 0 ? 0 : Math.round((completed / total) * 100),
+                progress:
+                    total === 0
+                        ? 0
+                        : Math.round((completed / total) * 100),
                 last_lesson_id: lastLesson
             };
+
         });
 
         res.status(200).json(result);
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+
+        res.status(500).json({
+            error: error.message
+        });
+
     }
 };
 
 export const test = async (req, res) => {
+
     const { data } = await supabaseAdmin
         .from("enrollments")
         .select("*");
 
     res.json(data);
+
 };
 
 export const getContinueLearning = async (req, res) => {
@@ -255,7 +279,9 @@ export const getContinueLearning = async (req, res) => {
             .eq("user_id", userId)
             .eq("is_completed", true);
 
-        const completedIds = completedLessons.map(l => l.lesson_id);
+        const completedIds = completedLessons.map(
+            l => l.lesson_id
+        );
 
         const completedCount = lessons.filter(
             l => completedIds.includes(l.id)
@@ -356,7 +382,9 @@ export const getDashboardSummary = async (req, res) => {
             .eq("user_id", userId)
             .eq("is_completed", true);
 
-        const completedIds = progress.map(p => p.lesson_id);
+        const completedIds = progress.map(
+            p => p.lesson_id
+        );
 
         const stats = courses.map(course => {
 
@@ -375,9 +403,10 @@ export const getDashboardSummary = async (req, res) => {
                 course_title: course.title,
                 total,
                 completed,
-                progress: total === 0
-                    ? 0
-                    : Math.round((completed / total) * 100)
+                progress:
+                    total === 0
+                        ? 0
+                        : Math.round((completed / total) * 100)
             };
 
         });
