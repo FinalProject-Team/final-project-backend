@@ -10,6 +10,7 @@ import jobsRoutes from "./routes/jobs.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
 import rankingRoutes from "./routes/ranking.routes.js";
 import { setupSwagger } from "./config/swagger.js";
+import roadmapRoutes from "./routes/roadmap.routes.js";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/progress", progressRoutes);
 app.use("/api/jobs", jobsRoutes);
 app.use("/api/projects", projectsRoutes);
 app.use("/api/ranking", rankingRoutes);
+app.use("/api/roadmap", roadmapRoutes);
 
 // Swagger
 setupSwagger(app);
