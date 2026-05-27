@@ -1,5 +1,5 @@
 import { fetchCourses } from "../services/courses.service.js";
-import supabase from "../config/supabase.js";
+import supabase, { supabaseAdmin } from "../config/supabase.js";
 // export const getCourses = async (req, res) => {
 
 //     try {
@@ -120,7 +120,7 @@ export const createCourse = async (req, res) => {
 
     const courseData = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
         .from("courses")
         .insert([courseData])
         .select();
