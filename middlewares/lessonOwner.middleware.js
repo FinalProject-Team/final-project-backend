@@ -23,10 +23,13 @@ export const lessonOwner = async (req, res, next) => {
             .single();
 
         // لو instructor مش صاحب الكورس
-        if (
-            req.profile.role === "instructor" &&
-            course.instructor_id !== req.profile.id
-        ) {
+        if (req.profile.role === "instructor") {
+            if (course.instructor_id !== req.profile.id) {
+                return res.status(403).json({
+                    message: "Not your lesson"
+                });
+            }
+        } {
             return res.status(403).json({
                 message: "Not your lesson"
             });

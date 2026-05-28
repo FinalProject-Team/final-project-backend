@@ -38,3 +38,57 @@ export const getInstructorDashboard = async (req, res) => {
         });
     }
 };
+
+
+
+export const getInstructorCourses = async (req, res) => {
+    try {
+        const instructorId = req.profile.id;
+
+        const { data, error } = await supabase
+            .from("courses")
+            .select("id, title, price, created_at")
+            .eq("instructor_id", instructorId);
+
+        if (error) throw error;
+
+        res.json(data);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+
+export const getInstructorCoursesSummary = async (req, res) => {
+    try {
+        const instructorId = req.profile.id;
+
+        const { data: courses, error } = await supabase
+            .from("courses")
+            .select("id, title")
+            .eq("instructor_id", instructorId);
+
+        if (error) throw error;
+
+        const { data: lessons } = await supabase
+            .from("lessons")
+            .select("course_id");
+
+        const summary = courses.map(course => {
+            const count = lessons.filter(
+                l => l.course_id === course.id
+            ).length;
+
+            return {
+                ...course,
+                totalLessons: count
+            };
+        });
+
+        res.json(summary);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
