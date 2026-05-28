@@ -99,6 +99,70 @@ export const login = async (req, res) => {
 
 };
 
+export const googleLogin = async (req, res) => {
+    try {
+        const { user } = req.body;
+
+        if (!user) {
+            return res.status(400).json({
+                message: "User object is required",
+            });
+        }
+
+        const { id, email, user_metadata } = user;
+
+        if (!id || !email) {
+            return res.status(400).json({
+                message: "Invalid Supabase user",
+            });
+        }
+
+        // check if exists
+        const { data: existing } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", id)
+            .maybeSingle();
+
+        // create if not exists
+        if (!existing) {
+            const { error } = await supabase.from("profiles").insert([
+                {
+                    id, // 👈 UUID من Supabase
+                    email,
+                    full_name: user_metadata?.full_name || "No Name",
+                    avatar_url: user_metadata?.avatar_url || "",
+                    role: "user",
+                },
+            ]);
+
+            if (error) {
+                return res.status(400).json({
+                    message: "Insert failed",
+                    error: error.message,
+                });
+            }
+        }
+
+        // return final user
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", id)
+            .maybeSingle();
+
+        return res.status(200).json({
+            message: "User synced successfully",
+            user: profile,
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message,
+        });
+    }
+}; 
+
 export const getMe = async (req, res) => {
 
     try {
@@ -131,14 +195,10 @@ export const getMe = async (req, res) => {
 
 };
 
-
-
-
-
 export const updateProfile = async (req, res) => {
     try {
 
-        const userId = req.user.id;
+        const userId = req.user.id || req.user.sub;
 
         const {
             full_name,
@@ -150,17 +210,19 @@ export const updateProfile = async (req, res) => {
             avatar_url
         } = req.body;
 
+        const updates = {};
+
+        if (full_name) updates.full_name = full_name;
+        if (bio) updates.bio = bio;
+        if (job_title) updates.job_title = job_title;
+        if (portfolio) updates.portfolio = portfolio;
+        if (username) updates.username = username;
+        if (headline) updates.headline = headline;
+        if (avatar_url) updates.avatar_url = avatar_url;
+
         const { error } = await supabase
             .from("profiles")
-            .update({
-                full_name,
-                bio,
-                job_title,
-                portfolio,
-                username,
-                headline,
-                avatar_url
-            })
+            .update(updates)
             .eq("id", userId);
 
         if (error) {
@@ -169,14 +231,11 @@ export const updateProfile = async (req, res) => {
             });
         }
 
-        // 👇 أهم سطر (نجيب الداتا بعد التحديث)
         const { data } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", userId)
             .maybeSingle();
-
-        console.log("PROFILE AFTER UPDATE:", data);
 
         return res.status(200).json({
             message: "Profile updated successfully",
