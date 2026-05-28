@@ -141,7 +141,7 @@ export const updateCourse = async (req, res) => {
 
     const updatedData = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
         .from("courses")
         .update(updatedData)
         .eq("id", id)
@@ -161,7 +161,7 @@ export const deleteCourse = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from("courses")
             .delete()
             .eq("id", id)

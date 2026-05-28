@@ -11,6 +11,9 @@ import projectsRoutes from "./routes/projects.routes.js";
 import rankingRoutes from "./routes/ranking.routes.js";
 import { setupSwagger } from "./config/swagger.js";
 import roadmapRoutes from "./routes/roadmap.routes.js";
+import lessonsRoutes from "./routes/lessons.routes.js";
+
+console.log("LESSONS IMPORT WORKING");
 
 dotenv.config();
 
@@ -33,6 +36,7 @@ app.use("/api/jobs", jobsRoutes);
 app.use("/api/projects", projectsRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/roadmap", roadmapRoutes);
+app.use("/api/lessons", lessonsRoutes);
 
 // Swagger
 setupSwagger(app);
@@ -46,6 +50,7 @@ app.use((err, req, res, next) => {
         message: "Something went wrong",
     });
 });
+
 
 // Port
 const PORT = process.env.PORT || 5000;
