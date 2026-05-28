@@ -16,6 +16,10 @@ import {
     deleteUser
 } from "../controllers/admin.controller.js";
 
+const router = express.Router();
+
+
+
 /**
  * @swagger
  * /api/admin/dashboard:
@@ -114,4 +118,5 @@ router.delete(
     deleteUser
 );
 
-const router = express.Router();
+
+export default router
