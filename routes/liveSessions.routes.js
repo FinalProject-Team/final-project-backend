@@ -2,7 +2,8 @@ import express from "express";
 import {
     createSession,
     getSessions,
-    getSessionById
+    getSessionById,
+    getMyLiveSessions
 } from "../controllers/liveSessions.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
@@ -35,13 +36,14 @@ const router = express.Router();
  *               - title
  *               - meeting_link
  *               - scheduled_at
+ *               - session_type
  *             properties:
  *               course_id:
  *                 type: string
  *                 example: "uuid-course-id"
  *               title:
  *                 type: string
- *                 example: "React Live Class"
+ *                 example: "React Live Workshop"
  *               description:
  *                 type: string
  *                 example: "Intro to React Hooks"
@@ -51,6 +53,15 @@ const router = express.Router();
  *               scheduled_at:
  *                 type: string
  *                 example: "2026-05-30T18:00:00Z"
+ *               session_type:
+ *                 type: string
+ *                 enum:
+ *                   - workshop
+ *                   - mentoring
+ *                   - q&a
+ *                   - live_coding
+ *                   - project_review
+ *                 example: "workshop"
  *     responses:
  *       201:
  *         description: Live session created successfully
@@ -58,6 +69,22 @@ const router = express.Router();
  *         description: Unauthorized
  */
 router.post("/", protect, createSession);
+
+/**
+ * @swagger
+ * /api/live-sessions/my:
+ *   get:
+ *     summary: Get logged-in student live sessions
+ *     tags: [Live Sessions]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Student live sessions fetched successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/my", protect, getMyLiveSessions);
 
 /**
  * @swagger

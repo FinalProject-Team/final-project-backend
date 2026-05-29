@@ -10,7 +10,8 @@ export const createSession = async (req, res) => {
             title,
             description,
             meeting_link,
-            scheduled_at
+            scheduled_at,
+            session_type
         } = req.body;
 
         const instructor_id = req.user.id;
@@ -25,10 +26,33 @@ export const createSession = async (req, res) => {
                     description,
                     meeting_link,
                     scheduled_at,
+                    session_type
                 }
             ])
             .select()
             .single();
+
+
+        // get student 
+        const { data: students } = await supabase
+            .from("enrollments")
+            .select("user_id")
+            .eq("course_id", course_id);
+
+
+        // Send Notification To Student 
+        if (students && students.length > 0) {
+
+            const notifications = students.map((student) => ({
+                user_id: student.user_id,
+                title: "New Live Session",
+                message: `${title} is scheduled at ${scheduled_at}`,
+                type: "live_session",
+                related_id: data.id
+            }));
+
+            await supabase.from("notifications").insert(notifications);
+        }
 
         if (error) {
             return res.status(400).json({
@@ -94,6 +118,53 @@ export const getSessionById = async (req, res) => {
         }
 
         res.json({ data });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        });
+    }
+};
+
+// GET User LiveSessions
+export const getMyLiveSessions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // 1️⃣ Get enrolled courses for this student
+        const { data: enrollments, error: enrollError } = await supabase
+            .from("enrollments")
+            .select("course_id")
+            .eq("user_id", userId);
+
+        if (enrollError) {
+            return res.status(400).json({
+                message: enrollError.message
+            });
+        }
+
+        if (!enrollments || enrollments.length === 0) {
+            return res.json({ data: [] });
+        }
+
+        const courseIds = enrollments.map(e => e.course_id);
+
+        // 2️⃣ Get live sessions for these courses
+        const { data, error } = await supabase
+            .from("live_sessions")
+            .select("*")
+            .in("course_id", courseIds)
+            .order("scheduled_at", { ascending: true });
+
+        if (error) {
+            return res.status(400).json({
+                message: error.message
+            });
+        }
+
+        res.json({
+            data
+        });
 
     } catch (error) {
         res.status(500).json({

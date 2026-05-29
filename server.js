@@ -15,6 +15,8 @@ import lessonsRoutes from "./routes/lessons.routes.js";
 import instructorRoutes from "./routes/instructor.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import liveSessionsRoutes from "./routes/liveSessions.routes.js";
+import notificationsRoutes from "./routes/notifications.routes.js";
+
 
 
 
@@ -43,7 +45,7 @@ app.use("/api/lessons", lessonsRoutes);
 app.use("/api/instructor", instructorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/live-sessions", liveSessionsRoutes);
-
+app.use("/api/notifications", notificationsRoutes);
 // Swagger
 setupSwagger(app);
 
