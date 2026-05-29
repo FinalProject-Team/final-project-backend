@@ -14,9 +14,9 @@ import roadmapRoutes from "./routes/roadmap.routes.js";
 import lessonsRoutes from "./routes/lessons.routes.js";
 import instructorRoutes from "./routes/instructor.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import liveSessionsRoutes from "./routes/liveSessions.routes.js";
 
 
-console.log("LESSONS IMPORT WORKING");
 
 dotenv.config();
 
@@ -42,6 +42,7 @@ app.use("/api/roadmap", roadmapRoutes);
 app.use("/api/lessons", lessonsRoutes);
 app.use("/api/instructor", instructorRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/live-sessions", liveSessionsRoutes);
 
 // Swagger
 setupSwagger(app);
