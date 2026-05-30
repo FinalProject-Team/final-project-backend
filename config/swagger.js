@@ -17,8 +17,13 @@ const options = {
                 description: "Current Host Server",
             },
             {
-                url: "https://9126c98e-e2e1-4608-8843-5de80d6148b8-00-12rx1cwtt852y.spock.replit.dev",
-                description: "Replit Production",
+                // url: "https://9126c98e-e2e1-4608-8843-5de80d6148b8-00-12rx1cwtt852y.spock.replit.dev",
+                // description: "Replit Production",
+
+
+                url: "https://final-project-backend-production-214a.up.railway.app",
+                description: "Railway Production",
+
             },
         ],
 
