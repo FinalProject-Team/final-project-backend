@@ -17,20 +17,34 @@ import adminRoutes from "./routes/admin.routes.js";
 import liveSessionsRoutes from "./routes/liveSessions.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
 
-
-
-
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+
+// مهم جدًا على Railway
+app.set("trust proxy", 1);
+
+
+// CORS مضبوط للـ frontend + production
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://final-project-backend-production-5fe7.up.railway.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true
+}));
+
+
 app.use(express.json());
+
 
 // Test Route
 app.get("/", (req, res) => {
     res.send("API is working");
 });
+
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -46,16 +60,20 @@ app.use("/api/instructor", instructorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/live-sessions", liveSessionsRoutes);
 app.use("/api/notifications", notificationsRoutes);
+
+
 // Swagger
 setupSwagger(app);
 
-// Error Handler
+
+// Error Handler (يحمي السيرفر من crash)
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error("ERROR:", err);
 
     res.status(500).json({
         success: false,
         message: "Something went wrong",
+        error: process.env.NODE_ENV === "production" ? null : err.message
     });
 });
 
