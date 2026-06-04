@@ -1,7 +1,7 @@
 import supabase, { supabaseAdmin } from "../config/supabase.js";
 
 /* =========================================
-   GET COURSES
+   GET COURSES (PUBLIC)
 ========================================= */
 export const getCourses = async (req, res) => {
     try {
@@ -21,21 +21,10 @@ export const getCourses = async (req, res) => {
             .select("*")
             .range(from, to);
 
-        if (search) {
-            query = query.ilike("title", `%${search}%`);
-        }
-
-        if (category) {
-            query = query.eq("category", category);
-        }
-
-        if (price) {
-            query = query.eq("price", price);
-        }
-
-        if (level) {
-            query = query.eq("level", level);
-        }
+        if (search) query = query.ilike("title", `%${search}%`);
+        if (category) query = query.eq("category", category);
+        if (price) query = query.eq("price", price);
+        if (level) query = query.eq("level", level);
 
         const { data, error } = await query;
 
@@ -69,6 +58,29 @@ export const getSingleCourse = async (req, res) => {
 };
 
 /* =========================================
+   GET INSTRUCTOR COURSES (NEW - FIXED)
+========================================= */
+export const getInstructorCourses = async (req, res) => {
+    try {
+        const instructorId = req.profile.id;
+
+        const { data, error } = await supabase
+            .from("courses")
+            .select("*")
+            .eq("instructor_id", instructorId)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+/* =========================================
    CREATE COURSE + NOTIFICATION
 ========================================= */
 export const createCourse = async (req, res) => {
@@ -87,7 +99,6 @@ export const createCourse = async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        // 🔔 Notification (للمعلم نفسه أو لاحقًا subscribers)
         await supabaseAdmin.from("notifications").insert([
             {
                 user_id: req.profile.id,
@@ -110,11 +121,10 @@ export const createCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedData = req.body;
 
         const { data, error } = await supabaseAdmin
             .from("courses")
-            .update(updatedData)
+            .update(req.body)
             .eq("id", id)
             .select();
 
@@ -122,13 +132,12 @@ export const updateCourse = async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        // 🔥 Get enrolled students
         const { data: enrollments } = await supabaseAdmin
             .from("enrollments")
             .select("user_id")
             .eq("course_id", id);
 
-        if (enrollments && enrollments.length > 0) {
+        if (enrollments?.length) {
             const notifications = enrollments.map((e) => ({
                 user_id: e.user_id,
                 title: "Course updated",
@@ -163,7 +172,6 @@ export const deleteCourse = async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        // 🔔 Optional notification (students or instructor)
         await supabaseAdmin.from("notifications").insert([
             {
                 user_id: req.profile.id,
