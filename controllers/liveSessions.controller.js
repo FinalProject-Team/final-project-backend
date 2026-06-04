@@ -1,3 +1,4 @@
+import { supabaseAdmin } from "../config/supabase.js";
 import supabase from "../config/supabase.js";
 
 /**
@@ -16,7 +17,7 @@ export const createSession = async (req, res) => {
 
         const instructor_id = req.user.id;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from("live_sessions")
             .insert([
                 {
@@ -32,17 +33,20 @@ export const createSession = async (req, res) => {
             .select()
             .single();
 
+        if (error) {
+            return res.status(400).json({
+                message: error.message
+            });
+        }
 
-        // get student 
+        // get students
         const { data: students } = await supabase
             .from("enrollments")
             .select("user_id")
             .eq("course_id", course_id);
 
-
-        // Send Notification To Student 
+        // Send Notification To Students
         if (students && students.length > 0) {
-
             const notifications = students.map((student) => ({
                 user_id: student.user_id,
                 title: "New Live Session",
@@ -51,13 +55,9 @@ export const createSession = async (req, res) => {
                 related_id: data.id
             }));
 
-            await supabase.from("notifications").insert(notifications);
-        }
-
-        if (error) {
-            return res.status(400).json({
-                message: error.message
-            });
+            await supabaseAdmin
+                .from("notifications")
+                .insert(notifications);
         }
 
         res.status(201).json({
@@ -97,7 +97,6 @@ export const getSessions = async (req, res) => {
     }
 };
 
-
 /**
  * Get Single Session
  */
@@ -126,12 +125,14 @@ export const getSessionById = async (req, res) => {
     }
 };
 
-// GET User LiveSessions
+/**
+ * Get My Live Sessions
+ */
 export const getMyLiveSessions = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // 1️⃣ Get enrolled courses for this student
+        // 1️⃣ Get enrolled courses
         const { data: enrollments, error: enrollError } = await supabase
             .from("enrollments")
             .select("course_id")
@@ -149,7 +150,7 @@ export const getMyLiveSessions = async (req, res) => {
 
         const courseIds = enrollments.map(e => e.course_id);
 
-        // 2️⃣ Get live sessions for these courses
+        // 2️⃣ Get live sessions
         const { data, error } = await supabase
             .from("live_sessions")
             .select("*")
@@ -162,9 +163,7 @@ export const getMyLiveSessions = async (req, res) => {
             });
         }
 
-        res.json({
-            data
-        });
+        res.json({ data });
 
     } catch (error) {
         res.status(500).json({

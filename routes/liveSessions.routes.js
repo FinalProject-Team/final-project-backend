@@ -7,6 +7,7 @@ import {
 } from "../controllers/liveSessions.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
+import { authorize } from "../middlewares/authorize.middleware.js";
 
 const router = express.Router();
 
@@ -67,8 +68,15 @@ const router = express.Router();
  *         description: Live session created successfully
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
  */
-router.post("/", protect, createSession);
+router.post(
+    "/",
+    protect,
+    authorize("admin", "instructor"),
+    createSession
+);
 
 /**
  * @swagger
