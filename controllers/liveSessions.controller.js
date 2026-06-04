@@ -41,7 +41,7 @@ export const createSession = async (req, res) => {
         }
 
         // Get students enrolled in course (PUBLIC READ)
-        const { data: students } = await supabase
+        const { data: students } = await supabaseAdmin
             .from("enrollments")
             .select("user_id")
             .eq("course_id", course_id);
@@ -78,7 +78,7 @@ export const createSession = async (req, res) => {
  */
 export const getSessions = async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from("live_sessions")
             .select("*")
             .order("scheduled_at", { ascending: true });
@@ -105,7 +105,7 @@ export const getSessionById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from("live_sessions")
             .select("*")
             .eq("id", id)
@@ -134,7 +134,7 @@ export const getMyLiveSessions = async (req, res) => {
         const userId = req.user.id;
 
         // Get enrolled courses
-        const { data: enrollments, error: enrollError } = await supabase
+        const { data: enrollments, error: enrollError } = await supabaseAdmin
             .from("enrollments")
             .select("course_id")
             .eq("user_id", userId);
