@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
     getCourseLessons,
     createLesson,
@@ -14,26 +15,43 @@ import { lessonOwner } from "../middlewares/lessonOwner.middleware.js";
 
 const router = express.Router();
 
-
-// ========================
-// TAGS
-// ========================
+/**
+ * ========================
+ * TAGS
+ * ========================
+ */
 /**
  * @swagger
  * tags:
  *   name: Lessons
- *   description: Lessons API
+ *   description: Lessons management API
  */
 
 
-// ========================
-// GET COURSE LESSONS
-// ========================
+
+
+/**
+ * ========================
+ * TEST ROUTE
+ * ========================
+ */
+router.get("/test", (req, res) => {
+    res.json({ ok: true });
+});
+
+
+
+
+/**
+ * ========================
+ * GET COURSE LESSONS
+ * ========================
+ */
 /**
  * @swagger
  * /api/lessons/course/{id}:
  *   get:
- *     summary: Get all lessons for a course
+ *     summary: Get all lessons for a course (enrolled students only)
  *     tags: [Lessons]
  *     security:
  *       - bearerAuth: []
@@ -55,14 +73,18 @@ router.get(
 );
 
 
-// ========================
-// GET SINGLE LESSON
-// ========================
+
+
+/**
+ * ========================
+ * GET SINGLE LESSON
+ * ========================
+ */
 /**
  * @swagger
  * /api/lessons/{id}:
  *   get:
- *     summary: Get single lesson
+ *     summary: Get single lesson (enrolled students only)
  *     tags: [Lessons]
  *     security:
  *       - bearerAuth: []
@@ -84,14 +106,18 @@ router.get(
 );
 
 
-// ========================
-// CREATE LESSON
-// ========================
+
+
+/**
+ * ========================
+ * CREATE LESSON
+ * ========================
+ */
 /**
  * @swagger
  * /api/lessons:
  *   post:
- *     summary: Create lesson (Instructor + Admin)
+ *     summary: Create lesson (Admin / Instructor only)
  *     tags: [Lessons]
  *     security:
  *       - bearerAuth: []
@@ -101,6 +127,9 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - course_id
+ *               - title
  *             example:
  *               course_id: "uuid"
  *               title: "Intro to React"
@@ -118,14 +147,18 @@ router.post(
 );
 
 
-// ========================
-// UPDATE LESSON
-// ========================
+
+
+/**
+ * ========================
+ * UPDATE LESSON
+ * ========================
+ */
 /**
  * @swagger
  * /api/lessons/{id}:
  *   put:
- *     summary: Update lesson
+ *     summary: Update lesson (owner only)
  *     tags: [Lessons]
  *     security:
  *       - bearerAuth: []
@@ -133,8 +166,6 @@ router.post(
  *       - in: path
  *         name: id
  *         required: true
- *         schema:
- *           type: string
  *     responses:
  *       200:
  *         description: Updated
@@ -148,14 +179,18 @@ router.put(
 );
 
 
-// ========================
-// DELETE LESSON
-// ========================
+
+
+/**
+ * ========================
+ * DELETE LESSON
+ * ========================
+ */
 /**
  * @swagger
  * /api/lessons/{id}:
  *   delete:
- *     summary: Delete lesson
+ *     summary: Delete lesson (owner only)
  *     tags: [Lessons]
  *     security:
  *       - bearerAuth: []
@@ -170,13 +205,5 @@ router.delete(
     lessonOwner,
     deleteLesson
 );
-
-
-// ========================
-// TEST ROUTE
-// ========================
-router.get("/test", (req, res) => {
-    res.json({ ok: true });
-});
 
 export default router;
