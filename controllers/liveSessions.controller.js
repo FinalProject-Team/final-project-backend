@@ -1,5 +1,5 @@
-import { supabaseAdmin } from "../config/supabase.js";
 import supabase from "../config/supabase.js";
+import { supabaseAdmin } from "../config/supabase.js";
 
 /**
  * Create Live Session
@@ -17,6 +17,7 @@ export const createSession = async (req, res) => {
 
         const instructor_id = req.user.id;
 
+        // Create session (ADMIN CLIENT)
         const { data, error } = await supabaseAdmin
             .from("live_sessions")
             .insert([
@@ -39,13 +40,13 @@ export const createSession = async (req, res) => {
             });
         }
 
-        // get students
+        // Get students enrolled in course (PUBLIC READ)
         const { data: students } = await supabase
             .from("enrollments")
             .select("user_id")
             .eq("course_id", course_id);
 
-        // Send Notification To Students
+        // Send notifications (ADMIN WRITE)
         if (students && students.length > 0) {
             const notifications = students.map((student) => ({
                 user_id: student.user_id,
@@ -60,13 +61,13 @@ export const createSession = async (req, res) => {
                 .insert(notifications);
         }
 
-        res.status(201).json({
-            message: "Live session created",
+        return res.status(201).json({
+            message: "Live session created successfully",
             data
         });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: error.message
         });
     }
@@ -88,10 +89,10 @@ export const getSessions = async (req, res) => {
             });
         }
 
-        res.json({ data });
+        return res.json({ data });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: error.message
         });
     }
@@ -116,23 +117,23 @@ export const getSessionById = async (req, res) => {
             });
         }
 
-        res.json({ data });
+        return res.json({ data });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: error.message
         });
     }
 };
 
 /**
- * Get My Live Sessions
+ * Get My Live Sessions (Student)
  */
 export const getMyLiveSessions = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // 1️⃣ Get enrolled courses
+        // Get enrolled courses
         const { data: enrollments, error: enrollError } = await supabase
             .from("enrollments")
             .select("course_id")
@@ -150,7 +151,7 @@ export const getMyLiveSessions = async (req, res) => {
 
         const courseIds = enrollments.map(e => e.course_id);
 
-        // 2️⃣ Get live sessions
+        // Get sessions for enrolled courses
         const { data, error } = await supabase
             .from("live_sessions")
             .select("*")
@@ -163,10 +164,10 @@ export const getMyLiveSessions = async (req, res) => {
             });
         }
 
-        res.json({ data });
+        return res.json({ data });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: error.message
         });
     }
