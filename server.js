@@ -27,15 +27,23 @@ app.set("trust proxy", 1);
 
 
 // CORS مضبوط للـ frontend + production
+// app.use(cors({
+//     origin: [
+//         "http://localhost:5174",
+//         "https://final-project-backend-production-5fe7.up.railway.app"
+//     ],
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+//     credentials: true
+// }));
+
 app.use(cors({
     origin: [
         "http://localhost:5173",
-        "https://final-project-backend-production-5fe7.up.railway.app"
+        "http://localhost:5174"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
 }));
-
 
 app.use(express.json());
 
