@@ -1,6 +1,7 @@
 // import supabase from "../config/supabase.js";
 import supabase, { supabaseAdmin } from "../config/supabase.js";
 
+
 export const completeLesson = async (req, res) => {
     try {
 
@@ -83,6 +84,12 @@ export const completeLesson = async (req, res) => {
                 })
                 .eq("id", userId);
 
+            await supabaseAdmin
+                .from("xp_history")
+                .insert({
+                    user_id: userId,
+                    xp: 50
+                });
         }
 
         res.status(200).json({
@@ -98,6 +105,8 @@ export const completeLesson = async (req, res) => {
 
     }
 };
+
+
 
 export const getMyProgress = async (req, res) => {
 
@@ -494,30 +503,35 @@ export const getDashboardSummary = async (req, res) => {
 };
 
 
+
 export const getProgressDashboard = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // 1. profile
+        // profile
         const { data: profile } = await supabaseAdmin
             .from("profiles")
             .select("xp_points")
             .eq("id", userId)
             .single();
 
-        // 2. courses progress (استخدمي اللي عندك)
-        const { data: enrollments } = await supabaseAdmin
+        // enrollments
+        const { data: enrollments = [] } = await supabaseAdmin
             .from("enrollments")
             .select(`course_id, courses(id, title)`)
             .eq("user_id", userId);
 
-        const courses = enrollments.map(e => e.courses);
+        const courses = enrollments
+            .map(e => e.courses)
+            .filter(Boolean);
 
-        const { data: lessons } = await supabaseAdmin
+        // lessons
+        const { data: lessons = [] } = await supabaseAdmin
             .from("lessons")
             .select("id, course_id");
 
-        const { data: progress } = await supabaseAdmin
+        // completed lessons
+        const { data: progress = [] } = await supabaseAdmin
             .from("lesson_progress")
             .select("lesson_id")
             .eq("user_id", userId)
@@ -525,36 +539,60 @@ export const getProgressDashboard = async (req, res) => {
 
         const completedIds = progress.map(p => p.lesson_id);
 
+        // progress per course
         const progress_per_course = courses.map(course => {
-            const courseLessons = lessons.filter(l => l.course_id === course.id);
+            const courseLessons = lessons.filter(
+                lesson => lesson.course_id === course.id
+            );
 
             const total = courseLessons.length;
-            const completed = courseLessons.filter(l =>
-                completedIds.includes(l.id)
+
+            const completed = courseLessons.filter(
+                lesson => completedIds.includes(lesson.id)
             ).length;
 
             return {
                 title: course.title,
-                progress: total ? Math.round((completed / total) * 100) : 0
+                progress: total
+                    ? Math.round((completed / total) * 100)
+                    : 0
             };
         });
 
-        // 3. profile summary
+        // xp history
+        const { data: xpHistory = [] } = await supabaseAdmin
+            .from("xp_history")
+            .select("xp, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true });
+
+        const xp_growth = xpHistory.map((item, index) => ({
+            week: `W${ index + 1 } `,
+            xp: item.xp
+        }));
+
+        // final response
         const result = {
             profile: {
                 overall_progress: Math.round(
-                    progress_per_course.reduce((a, b) => a + b.progress, 0) /
-                    (progress_per_course.length || 1)
+                    progress_per_course.reduce(
+                        (sum, course) => sum + course.progress,
+                        0
+                    ) / (progress_per_course.length || 1)
                 ),
+
                 current_streak: 7,
-                total_xp_this_month: profile?.xp_points || 0,
+
+                total_xp_this_month:
+                    profile?.xp_points || 0,
+
                 certificates_count: 0
             },
 
-            xp_growth: [],
+            xp_growth,
 
             course_completion: {
-                completed: progress.filter(Boolean).length,
+                completed: progress.length,
                 in_progress: courses.length,
                 not_started: 0
             },
@@ -564,9 +602,12 @@ export const getProgressDashboard = async (req, res) => {
             daily_learning_hours: []
         };
 
-        res.json(result);
+        res.status(200).json(result);
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({
+            error: err.message
+        });
     }
 };
+
