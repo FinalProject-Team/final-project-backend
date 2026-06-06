@@ -492,3 +492,81 @@ export const getDashboardSummary = async (req, res) => {
     }
 
 };
+
+
+export const getProgressDashboard = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // 1. profile
+        const { data: profile } = await supabaseAdmin
+            .from("profiles")
+            .select("xp_points")
+            .eq("id", userId)
+            .single();
+
+        // 2. courses progress (استخدمي اللي عندك)
+        const { data: enrollments } = await supabaseAdmin
+            .from("enrollments")
+            .select(`course_id, courses(id, title)`)
+            .eq("user_id", userId);
+
+        const courses = enrollments.map(e => e.courses);
+
+        const { data: lessons } = await supabaseAdmin
+            .from("lessons")
+            .select("id, course_id");
+
+        const { data: progress } = await supabaseAdmin
+            .from("lesson_progress")
+            .select("lesson_id")
+            .eq("user_id", userId)
+            .eq("is_completed", true);
+
+        const completedIds = progress.map(p => p.lesson_id);
+
+        const progress_per_course = courses.map(course => {
+            const courseLessons = lessons.filter(l => l.course_id === course.id);
+
+            const total = courseLessons.length;
+            const completed = courseLessons.filter(l =>
+                completedIds.includes(l.id)
+            ).length;
+
+            return {
+                title: course.title,
+                progress: total ? Math.round((completed / total) * 100) : 0
+            };
+        });
+
+        // 3. profile summary
+        const result = {
+            profile: {
+                overall_progress: Math.round(
+                    progress_per_course.reduce((a, b) => a + b.progress, 0) /
+                    (progress_per_course.length || 1)
+                ),
+                current_streak: 7,
+                total_xp_this_month: profile?.xp_points || 0,
+                certificates_count: 0
+            },
+
+            xp_growth: [],
+
+            course_completion: {
+                completed: progress.filter(Boolean).length,
+                in_progress: courses.length,
+                not_started: 0
+            },
+
+            progress_per_course,
+
+            daily_learning_hours: []
+        };
+
+        res.json(result);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

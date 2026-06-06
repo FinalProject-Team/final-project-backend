@@ -10,6 +10,7 @@ import {
     getContinueLearning,
     getRecentActivity,
     getDashboardSummary,
+    getProgressDashboard
 } from "../controllers/progress.controller.js";
 
 const router = express.Router();
@@ -166,6 +167,95 @@ router.get(
     "/dashboard-summary",
     protect,
     getDashboardSummary
+);
+
+
+/**
+ * @swagger
+ * /api/progress/progress-dashboard:
+ *   get:
+ *     summary: Get full progress dashboard data (for Progress Page UI)
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Progress dashboard data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 profile:
+ *                   type: object
+ *                   properties:
+ *                     overall_progress:
+ *                       type: number
+ *                       example: 43
+ *                     current_streak:
+ *                       type: number
+ *                       example: 7
+ *                     total_xp_this_month:
+ *                       type: number
+ *                       example: 4820
+ *                     certificates_count:
+ *                       type: number
+ *                       example: 2
+ *                 xp_growth:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       week:
+ *                         type: string
+ *                         example: "W2"
+ *                       xp:
+ *                         type: number
+ *                         example: 1200
+ *                 course_completion:
+ *                   type: object
+ *                   properties:
+ *                     completed:
+ *                       type: number
+ *                       example: 12
+ *                     in_progress:
+ *                       type: number
+ *                       example: 6
+ *                     not_started:
+ *                       type: number
+ *                       example: 10
+ *                 progress_per_course:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       title:
+ *                         type: string
+ *                         example: "React"
+ *                       progress:
+ *                         type: number
+ *                         example: 62
+ *                 daily_learning_hours:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       day:
+ *                         type: string
+ *                         example: "Mon"
+ *                       hours:
+ *                         type: number
+ *                         example: 2
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+
+router.get(
+    "/progress-dashboard",
+    protect,
+    getProgressDashboard
 );
 
 export default router;
