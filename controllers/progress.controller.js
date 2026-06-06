@@ -539,6 +539,11 @@ export const getProgressDashboard = async (req, res) => {
 
         const completedIds = progress.map(p => p.lesson_id);
 
+        console.log("USER ID:", userId);
+        console.log("courses:", courses);
+        console.log("lessons:", lessons.length);
+        console.log("completedIds:", completedIds);
+
         // progress per course
         const progress_per_course = courses.map(course => {
             const courseLessons = lessons.filter(
@@ -567,8 +572,20 @@ export const getProgressDashboard = async (req, res) => {
             .order("created_at", { ascending: true });
 
         const xp_growth = xpHistory.map((item, index) => ({
-            week: `W${ index + 1 } `,
+            week: `W${index + 1}`,
             xp: item.xp
+        }));
+
+        // daily learning hours 👇 (الجزء الجديد)
+        const { data: daily = [] } = await supabaseAdmin
+            .from("daily_learning_hours")
+            .select("date, hours")
+            .eq("user_id", userId)
+            .order("date", { ascending: true });
+
+        const daily_learning_hours = daily.map(d => ({
+            day: d.date,
+            hours: d.hours
         }));
 
         // final response
@@ -583,8 +600,7 @@ export const getProgressDashboard = async (req, res) => {
 
                 current_streak: 7,
 
-                total_xp_this_month:
-                    profile?.xp_points || 0,
+                total_xp_this_month: profile?.xp_points || 0,
 
                 certificates_count: 0
             },
@@ -599,7 +615,7 @@ export const getProgressDashboard = async (req, res) => {
 
             progress_per_course,
 
-            daily_learning_hours: []
+            daily_learning_hours
         };
 
         res.status(200).json(result);
@@ -608,6 +624,45 @@ export const getProgressDashboard = async (req, res) => {
         res.status(500).json({
             error: err.message
         });
+    }
+};
+
+export const addLearningTime = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { hours } = req.body;
+
+        const today = new Date().toISOString().split("T")[0];
+
+        const { data: existing } = await supabaseAdmin
+            .from("daily_learning_hours")
+            .select("*")
+            .eq("user_id", userId)
+            .eq("date", today)
+            .maybeSingle();
+
+        if (existing) {
+            await supabaseAdmin
+                .from("daily_learning_hours")
+                .update({
+                    hours: existing.hours + hours
+                })
+                .eq("id", existing.id);
+        } else {
+            await supabaseAdmin
+                .from("daily_learning_hours")
+                .insert([
+                    {
+                        user_id: userId,
+                        hours
+                    }
+                ]);
+        }
+
+        res.json({ message: "time added" });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 };
 

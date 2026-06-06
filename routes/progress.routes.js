@@ -10,7 +10,8 @@ import {
     getContinueLearning,
     getRecentActivity,
     getDashboardSummary,
-    getProgressDashboard
+    getProgressDashboard,
+    addLearningTime
 } from "../controllers/progress.controller.js";
 
 const router = express.Router();
@@ -258,4 +259,48 @@ router.get(
     getProgressDashboard
 );
 
+
+/**
+ * @swagger
+ * /api/progress/learning-time:
+ *   post:
+ *     summary: Add daily learning time for user
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - hours
+ *             properties:
+ *               hours:
+ *                 type: number
+ *                 example: 2
+ *                 description: Number of learning hours to add for today
+ *     responses:
+ *       200:
+ *         description: Learning time added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: time added
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+
+router.post(
+    "/learning-time",
+    protect,
+    addLearningTime
+);
 export default router;
