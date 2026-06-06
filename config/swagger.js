@@ -4,21 +4,29 @@ import swaggerUi from "swagger-ui-express";
 const options = {
     definition: {
         openapi: "3.0.0",
+
         info: {
             title: "Courses API",
             version: "1.0.0",
             description: "API Documentation for Courses Project",
         },
+
         servers: [
             {
                 url: "/",
-                description: "Current Host Server"
+                description: "Current Host Server",
             },
             {
-                url: "https://9126c98e-e2e1-4608-8843-5de80d6148b8-00-12rx1cwtt852y.spock.replit.dev",
-                description: "Replit Production"
-            }
+                // url: "https://9126c98e-e2e1-4608-8843-5de80d6148b8-00-12rx1cwtt852y.spock.replit.dev",
+                // description: "Replit Production",
+
+
+                url: "https://final-project-backend-production-214a.up.railway.app",
+                description: "Railway Production",
+
+            },
         ],
+
         components: {
             securitySchemes: {
                 bearerAuth: {
@@ -28,16 +36,27 @@ const options = {
                 },
             },
         },
+
+        security: [
+            {
+                bearerAuth: [],
+            },
+        ],
     },
+
     apis: ["./routes/*.js", "./routes/**/*.js"],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
 
 export const setupSwagger = (app) => {
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-        swaggerOptions: {
-            persistAuthorization: true,
-        },
-    }));
+    app.use(
+        "/api-docs",
+        swaggerUi.serve,
+        swaggerUi.setup(swaggerSpec, {
+            swaggerOptions: {
+                persistAuthorization: true,
+            },
+        })
+    );
 };

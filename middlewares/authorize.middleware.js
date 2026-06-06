@@ -8,7 +8,7 @@ export const authorize = (...allowedRoles) => {
 
         try {
 
-            const userRole = req.profile.role;
+            const userRole = req.profile?.role;
 
             if (!allowedRoles.includes(userRole)) {
                 return res.status(403).json({

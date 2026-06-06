@@ -5,12 +5,13 @@ import {
     login,
     getMe,
     updateProfile,
+    googleLogin
 } from "../controllers/auth.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
-
+console.log("AUTH ROUTES LOADED");
 /**
  * @swagger
  * tags:
@@ -84,6 +85,68 @@ router.post("/login", login);
 
 /**
  * @swagger
+ * /api/auth/google-login:
+ *   post:
+ *     summary: Google OAuth login (Supabase sync user)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user
+ *             properties:
+ *               user:
+ *                 type: object
+ *                 description: Supabase authenticated user object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: "123456789"
+ *                   email:
+ *                     type: string
+ *                     example: "hager@gmail.com"
+ *                   user_metadata:
+ *                     type: object
+ *                     properties:
+ *                       full_name:
+ *                         type: string
+ *                         example: "Hager Nady"
+ *                       avatar_url:
+ *                         type: string
+ *                         example: "https://..."
+ *     responses:
+ *       200:
+ *         description: User synced successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     full_name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                       example: "user"
+ *       400:
+ *         description: Bad request (missing user data)
+ *       500:
+ *         description: Server error
+ */
+router.post("/google-login", googleLogin);
+/**
+ * @swagger
  * /api/auth/me:
  *   get:
  *     summary: Get current user
@@ -127,4 +190,8 @@ router.get("/me", protect, getMe);
  */
 router.put("/profile", protect, updateProfile);
 
+
+router.get("/test", (req, res) => {
+    res.json({ message: "AUTH ROUTES WORKING" });
+});
 export default router;
