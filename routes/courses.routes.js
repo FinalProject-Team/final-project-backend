@@ -178,9 +178,28 @@ router.post(
  *       - in: path
  *         name: id
  *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *             example:
+ *               title: "Updated Course"
+ *               description: "New description"
+ *               price: 200
  *     responses:
  *       200:
- *         description: Updated
+ *         description: Updated successfully
  */
 router.put(
     "/:id",
