@@ -227,9 +227,22 @@ router.put(
  *     tags: [Courses]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Course ID
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Deleted
+ *       404:
+ *         description: Course not found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
  */
 router.delete(
     "/:id",
