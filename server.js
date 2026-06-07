@@ -37,16 +37,12 @@ app.set("trust proxy", 1);
 // }));
 
 app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true); // Postman / server-to-server
-
-        if (origin.includes("localhost:517")) {
-            return callback(null, true);
-        }
-
-        return callback(new Error("Not allowed by CORS"));
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    origin: [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://final-project-backend-production-214a.up.railway.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true
 }));
 
