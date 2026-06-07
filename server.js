@@ -37,10 +37,15 @@ app.set("trust proxy", 1);
 // }));
 
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "http://localhost:5174"
-    ],
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true); // Postman / server-to-server
+
+        if (origin.includes("localhost:517")) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
 }));
