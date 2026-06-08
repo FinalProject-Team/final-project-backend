@@ -4,7 +4,13 @@ import supabase, { supabaseAdmin } from "../config/supabase.js";
 
 export const register = async (req, res) => {
     try {
-        const { email, password, full_name, phone, confirmPassword } = req.body;
+        const {
+            email,
+            password,
+            full_name,
+            phone,
+            confirmPassword,
+        } = req.body;
 
         if (!email || !password || !full_name || !phone || !confirmPassword) {
             return res.status(400).json({
@@ -43,6 +49,10 @@ export const register = async (req, res) => {
                 }
             ]);
 
+        if (role === "instructor") {
+            await createInstructorProfile(data.user.id);
+        }
+
         if (profileError) {
             return res.status(400).json({
                 error: profileError.message
@@ -58,6 +68,21 @@ export const register = async (req, res) => {
         res.status(500).json({
             error: error.message
         });
+    }
+};
+
+
+const createInstructorProfile = async (userId) => {
+    const { error } = await supabaseAdmin
+        .from("instructor_profiles")
+        .insert([
+            {
+                id: userId
+            }
+        ]);
+
+    if (error) {
+        console.log("Instructor profile error:", error.message);
     }
 };
 
