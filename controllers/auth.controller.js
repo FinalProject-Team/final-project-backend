@@ -1,8 +1,9 @@
 import supabase, { supabaseAdmin } from "../config/supabase.js";
 
+/* ───────────────────────── REGISTER ───────────────────────── */
+
 export const register = async (req, res) => {
     try {
-
         const { email, password, full_name, phone, confirmPassword } = req.body;
 
         if (!email || !password || !full_name || !phone || !confirmPassword) {
@@ -37,7 +38,8 @@ export const register = async (req, res) => {
                 {
                     id: data.user.id,
                     full_name,
-                    phone
+                    phone,
+                    role: "student" // ✅ default role
                 }
             ]);
 
@@ -53,18 +55,16 @@ export const register = async (req, res) => {
         });
 
     } catch (error) {
-
         res.status(500).json({
             error: error.message
         });
-
     }
 };
 
+/* ───────────────────────── LOGIN ───────────────────────── */
 
 export const login = async (req, res) => {
     try {
-
         const { email, password } = req.body;
 
         if (!email || !password) {
@@ -84,20 +84,33 @@ export const login = async (req, res) => {
             });
         }
 
-        res.status(200).json({
+        // 🔥 GET REAL ROLE FROM profiles TABLE
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", data.user.id)
+            .single();
+
+        return res.status(200).json({
             message: "Login successful",
-            data
+            data: {
+                user: {
+                    ...data.user,
+                    role: profile?.role || "student",
+                    profile: profile || null
+                },
+                session: data.session
+            }
         });
 
     } catch (error) {
-
         res.status(500).json({
             error: error.message
         });
-
     }
-
 };
+
+/* ───────────────────────── GOOGLE LOGIN ───────────────────────── */
 
 export const googleLogin = async (req, res) => {
     try {
@@ -128,11 +141,11 @@ export const googleLogin = async (req, res) => {
         if (!existing) {
             const { error } = await supabase.from("profiles").insert([
                 {
-                    id, // 👈 UUID من Supabase
+                    id,
                     email,
                     full_name: user_metadata?.full_name || "No Name",
                     avatar_url: user_metadata?.avatar_url || "",
-                    role: "user",
+                    role: "student" // ✅ FIXED (was "user")
                 },
             ]);
 
@@ -161,12 +174,12 @@ export const googleLogin = async (req, res) => {
             message: error.message,
         });
     }
-}; 
+};
+
+/* ───────────────────────── GET ME ───────────────────────── */
 
 export const getMe = async (req, res) => {
-
     try {
-
         const userId = req.user.id;
 
         const { data, error } = await supabase
@@ -181,23 +194,21 @@ export const getMe = async (req, res) => {
             });
         }
 
-        res.status(200).json({
-            profile: data
+        return res.status(200).json({
+            user: data   // ✅ unified format
         });
 
     } catch (error) {
-
         res.status(500).json({
             error: error.message
         });
-
     }
-
 };
+
+/* ───────────────────────── UPDATE PROFILE ───────────────────────── */
 
 export const updateProfile = async (req, res) => {
     try {
-
         const userId = req.user.id || req.user.sub;
 
         const {
