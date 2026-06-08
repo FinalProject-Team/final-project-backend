@@ -5,7 +5,8 @@ import { authorize } from "../middlewares/authorize.middleware.js";
 import {
     getInstructorDashboard,
     getInstructorCourses,
-    getInstructorCoursesSummary
+    getInstructorCoursesSummary,
+    getInstructorActivity
 } from "../controllers/instructor.controller.js";
 
 const router = express.Router();
@@ -125,5 +126,20 @@ router.get(
     authorize("instructor"),
     getInstructorCoursesSummary
 );
+
+
+/**
+ * @swagger
+ * /api/instructor/activity:
+ *   get:
+ *     summary: Get instructor recent activity
+ *     tags: [Instructor Dashboard APIs]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.get("/activity", protect, getInstructorActivity);
 
 export default router;

@@ -145,3 +145,75 @@ export const getInstructorCoursesSummary = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+
+export const getInstructorActivity = async (req, res) => {
+    try {
+        const instructorId = req.profile.id;
+
+        // 1. Get instructor courses
+        const { data: courses, error: coursesError } = await supabase
+            .from("courses")
+            .select("id, title, created_at")
+            .eq("instructor_id", instructorId);
+
+        if (coursesError) throw coursesError;
+
+        const courseIds = courses.map(c => c.id);
+
+        let activities = [];
+
+        // 2. Course created activity
+        courses.forEach(course => {
+            activities.push({
+                type: "course",
+                message: `New course created: ${course.title}`,
+                created_at: course.created_at
+            });
+        });
+
+        if (courseIds.length > 0) {
+
+            // 3. Lessons activity
+            const { data: lessons } = await supabase
+                .from("lessons")
+                .select("title, created_at, course_id")
+                .in("course_id", courseIds);
+
+            lessons?.forEach(lesson => {
+                activities.push({
+                    type: "lesson",
+                    message: `New lesson added: ${lesson.title}`,
+                    created_at: lesson.created_at
+                });
+            });
+
+            // 4. Enrollments activity
+            const { data: enrollments } = await supabase
+                .from("enrollments")
+                .select("created_at, course_id")
+                .in("course_id", courseIds);
+
+            enrollments?.forEach(enroll => {
+                activities.push({
+                    type: "enrollment",
+                    message: `A student enrolled in a course`,
+                    created_at: enroll.created_at
+                });
+            });
+        }
+
+        // 5. Sort by newest first
+        activities.sort((a, b) =>
+            new Date(b.created_at) - new Date(a.created_at)
+        );
+
+        // 6. return latest 10 only
+        return res.json(activities.slice(0, 10));
+
+    } catch (err) {
+        return res.status(500).json({
+            error: err.message
+        });
+    }
+};
