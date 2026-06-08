@@ -73,6 +73,7 @@ export const login = async (req, res) => {
             });
         }
 
+        // 1️⃣ LOGIN FROM SUPABASE AUTH
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
@@ -84,19 +85,24 @@ export const login = async (req, res) => {
             });
         }
 
-        // 🔥 GET REAL ROLE FROM profiles TABLE
-        const { data: profile } = await supabase
+        // 2️⃣ GET PROFILE (ROLE) FROM DATABASE
+        const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", data.user.id)
-            .single();
+            .maybeSingle();
 
+        if (profileError) {
+            console.log("Profile fetch error:", profileError.message);
+        }
+
+        // 3️⃣ RESPONSE (IMPORTANT PART)
         return res.status(200).json({
             message: "Login successful",
             data: {
                 user: {
                     ...data.user,
-                    role: profile?.role || "student",
+                    role: profile?.role || "student",   // ✅ REAL ROLE
                     profile: profile || null
                 },
                 session: data.session
@@ -104,7 +110,7 @@ export const login = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             error: error.message
         });
     }
@@ -130,14 +136,14 @@ export const googleLogin = async (req, res) => {
             });
         }
 
-        // check if exists
+        // 1️⃣ check if profile exists
         const { data: existing } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", id)
             .maybeSingle();
 
-        // create if not exists
+        // 2️⃣ create if not exists
         if (!existing) {
             const { error } = await supabase.from("profiles").insert([
                 {
@@ -145,7 +151,7 @@ export const googleLogin = async (req, res) => {
                     email,
                     full_name: user_metadata?.full_name || "No Name",
                     avatar_url: user_metadata?.avatar_url || "",
-                    role: "student" // ✅ FIXED (was "user")
+                    role: "student"
                 },
             ]);
 
@@ -157,16 +163,34 @@ export const googleLogin = async (req, res) => {
             }
         }
 
-        // return final user
-        const { data: profile } = await supabase
+        // 3️⃣ get final profile
+        const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", id)
             .maybeSingle();
 
+        if (profileError) {
+            console.log("Profile fetch error:", profileError.message);
+        }
+
+        // 4️⃣ IMPORTANT: get session from Supabase user
+        const { data: sessionData, error: sessionError } =
+            await supabase.auth.admin.getUserById(id);
+
+        // (fallback if session not needed)
+        const session = null;
+
+        // 5️⃣ RETURN SAME FORMAT AS LOGIN
         return res.status(200).json({
             message: "User synced successfully",
-            user: profile,
+            data: {
+                user: {
+                    ...profile,
+                    role: profile?.role || "student"
+                },
+                session
+            }
         });
 
     } catch (error) {
