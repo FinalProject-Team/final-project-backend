@@ -1,5 +1,46 @@
 import supabase from "../config/supabase.js";
 
+// export const getInstructorDashboard = async (req, res) => {
+//     try {
+//         const instructorId = req.profile.id;
+
+//         // 1. Get instructor courses
+//         const { data: courses, error: coursesError } = await supabase
+//             .from("courses")
+//             .select("id")
+//             .eq("instructor_id", instructorId);
+
+//         if (coursesError) throw coursesError;
+
+//         const courseIds = courses.map(c => c.id);
+
+//         // 2. Get lessons count
+//         const { count: lessonsCount } = await supabase
+//             .from("lessons")
+//             .select("*", { count: "exact", head: true })
+//             .in("course_id", courseIds);
+
+//         // 3. Get enrollments count
+//         const { count: studentsCount } = await supabase
+//             .from("enrollments")
+//             .select("*", { count: "exact", head: true })
+//             .in("course_id", courseIds);
+
+//         res.json({
+//             totalCourses: courses.length,
+//             totalLessons: lessonsCount || 0,
+//             totalStudents: studentsCount || 0
+//         });
+
+//     } catch (err) {
+//         res.status(500).json({
+//             error: err.message
+//         });
+//     }
+// };
+
+// import supabase from "../config/supabase.js";
+
 export const getInstructorDashboard = async (req, res) => {
     try {
         const instructorId = req.profile.id;
@@ -14,31 +55,43 @@ export const getInstructorDashboard = async (req, res) => {
 
         const courseIds = courses.map(c => c.id);
 
-        // 2. Get lessons count
-        const { count: lessonsCount } = await supabase
-            .from("lessons")
-            .select("*", { count: "exact", head: true })
-            .in("course_id", courseIds);
+        // 2. Default values (important fix)
+        let lessonsCount = 0;
+        let studentsCount = 0;
 
-        // 3. Get enrollments count
-        const { count: studentsCount } = await supabase
-            .from("enrollments")
-            .select("*", { count: "exact", head: true })
-            .in("course_id", courseIds);
+        // 3. Only query if courses exist
+        if (courseIds.length > 0) {
 
-        res.json({
+            const { count: lCount, error: lessonsError } = await supabase
+                .from("lessons")
+                .select("*", { count: "exact", head: true })
+                .in("course_id", courseIds);
+
+            if (lessonsError) throw lessonsError;
+
+            const { count: sCount, error: studentsError } = await supabase
+                .from("enrollments")
+                .select("*", { count: "exact", head: true })
+                .in("course_id", courseIds);
+
+            if (studentsError) throw studentsError;
+
+            lessonsCount = lCount || 0;
+            studentsCount = sCount || 0;
+        }
+
+        return res.json({
             totalCourses: courses.length,
-            totalLessons: lessonsCount || 0,
-            totalStudents: studentsCount || 0
+            totalLessons: lessonsCount,
+            totalStudents: studentsCount
         });
 
     } catch (err) {
-        res.status(500).json({
+        return res.status(500).json({
             error: err.message
         });
     }
 };
-
 
 
 export const getInstructorCourses = async (req, res) => {
