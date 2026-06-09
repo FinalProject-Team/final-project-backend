@@ -1,5 +1,4 @@
 import supabase from "../config/supabase.js";
-
 export const getMyInstructorProfile = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -7,7 +6,7 @@ export const getMyInstructorProfile = async (req, res) => {
         console.log("REQ USER:", req.user);
         console.log("USER ID:", req.user?.id);
 
-        // 1️ get instructor profile
+        // 1️⃣ get instructor profile
         const { data, error } = await supabase
             .from("instructor_profiles")
             .select("*")
@@ -18,7 +17,7 @@ export const getMyInstructorProfile = async (req, res) => {
             return res.status(400).json({ error: error.message });
         }
 
-        // 2️ create profile if not exists
+        // 2️⃣ create profile if not exists
         let profile = data;
 
         if (!profile) {
@@ -35,13 +34,13 @@ export const getMyInstructorProfile = async (req, res) => {
             profile = newProfile;
         }
 
-        // 3️ get courses count
+        // 3️⃣ get courses count
         const { count: coursesCount } = await supabase
             .from("courses")
             .select("*", { count: "exact", head: true })
             .eq("instructor_id", userId);
 
-        // 4️ get course ids
+        // 4️⃣ get course ids
         const { data: courses } = await supabase
             .from("courses")
             .select("id")
@@ -49,7 +48,7 @@ export const getMyInstructorProfile = async (req, res) => {
 
         const courseIds = courses?.map(c => c.id) || [];
 
-        // 5️ get lessons count
+        // 5️⃣ get lessons count
         let lessonsCount = 0;
 
         if (courseIds.length > 0) {
@@ -61,7 +60,7 @@ export const getMyInstructorProfile = async (req, res) => {
             lessonsCount = count || 0;
         }
 
-        // 6️ get students count (enrollments)
+        // 6️⃣ get students count (enrollments)
         let studentsCount = 0;
 
         if (courseIds.length > 0) {
@@ -73,9 +72,17 @@ export const getMyInstructorProfile = async (req, res) => {
             studentsCount = count || 0;
         }
 
-        // 7️ final response
+        // 7️⃣ get email from profiles
+        const { data: userProfile } = await supabase
+            .from("profiles")
+            .select("email")
+            .eq("id", userId)
+            .maybeSingle();
+
+        // 8️⃣ final response
         return res.json({
             ...profile,
+            email: userProfile?.email || null,
             courses_count: coursesCount || 0,
             lessons_count: lessonsCount,
             students_count: studentsCount
