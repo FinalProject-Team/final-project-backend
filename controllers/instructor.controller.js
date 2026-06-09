@@ -94,25 +94,38 @@ export const getInstructorDashboard = async (req, res) => {
 };
 
 
+// export const getInstructorCourses = async (req, res) => {
+//     try {
+//         const instructorId = req.profile.id;
+
+//         const { data, error } = await supabase
+//             .from("courses")
+//             .select("id, title, price, created_at")
+//             .eq("instructor_id", instructorId);
+
+//         if (error) throw error;
+
+//         res.json(data);
+
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// };
+
 export const getInstructorCourses = async (req, res) => {
-    try {
-        const instructorId = req.profile.id;
+    const instructorId = req.user.id; // أو من params
 
-        const { data, error } = await supabase
-            .from("courses")
-            .select("id, title, price, created_at")
-            .eq("instructor_id", instructorId);
+    const { data, error } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("instructor_id", instructorId);
 
-        if (error) throw error;
-
-        res.json(data);
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    if (error) {
+        return res.status(400).json({ error: error.message });
     }
+
+    return res.json(data);
 };
-
-
 export const getInstructorCoursesSummary = async (req, res) => {
     try {
         const instructorId = req.profile.id;

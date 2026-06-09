@@ -1,31 +1,17 @@
-export const authorize = (...allowedRoles) => {
-
+export const authorize = (...roles) => {
     return (req, res, next) => {
+        console.log("🔥 AUTHORIZE HIT");
 
-        console.log("PROFILE:", req.profile);
-        console.log("ROLE:", req.profile?.role);
-        console.log("ALLOWED:", allowedRoles);
-
-        try {
-
-            const userRole = req.profile?.role;
-
-            if (!allowedRoles.includes(userRole)) {
-                return res.status(403).json({
-                    message: "Forbidden"
-                });
-            }
-
-            next();
-
-        } catch (error) {
-
-            res.status(500).json({
-                error: error.message
-            });
-
+        if (!req.profile) {
+            return res.status(403).json({ message: "No profile" });
         }
 
-    };
+        if (!roles.includes(req.profile.role)) {
+            return res.status(403).json({
+                message: "Forbidden role"
+            });
+        }
 
+        next();
+    };
 };

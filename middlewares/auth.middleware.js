@@ -2,8 +2,9 @@
 // import supabase from "../config/supabase.js";
 import supabase, { supabaseAdmin } from "../config/supabase.js";
 export const protect = async (req, res, next) => {
-    console.log("🔥 PROTECT HIT");
+    // console.log("🔥 PROTECT HIT");
     try {
+
 
         const authHeader = req.headers.authorization;
 
@@ -39,6 +40,11 @@ export const protect = async (req, res, next) => {
 
         req.profile = profile;
         console.log("REQ PROFILE:", req.profile);
+        if (!profile) {
+            return res.status(403).json({
+                message: "Profile not found"
+            });
+        }
 
         next();
 
