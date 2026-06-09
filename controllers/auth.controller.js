@@ -14,13 +14,18 @@ export const register = async (req, res) => {
         } = req.body;
 
         if (!email || !password || !full_name || !phone || !confirmPassword) {
-            return res.status(400).json({ message: "All fields are required" });
+            return res.status(400).json({
+                message: "All fields are required"
+            });
         }
 
         if (password !== confirmPassword) {
-            return res.status(400).json({ message: "Passwords do not match" });
+            return res.status(400).json({
+                message: "Passwords do not match"
+            });
         }
 
+        // create auth user
         const { data, error } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
@@ -28,9 +33,12 @@ export const register = async (req, res) => {
         });
 
         if (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({
+                error: error.message
+            });
         }
 
+        // create profile
         const { error: profileError } = await supabaseAdmin
             .from("profiles")
             .insert([
@@ -44,9 +52,12 @@ export const register = async (req, res) => {
             ]);
 
         if (profileError) {
-            return res.status(400).json({ error: profileError.message });
+            return res.status(400).json({
+                error: profileError.message
+            });
         }
 
+        // optional instructor profile
         if (role === "instructor") {
             await createInstructorProfile(data.user.id);
         }
@@ -57,7 +68,9 @@ export const register = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message
+        });
     }
 };
 
@@ -79,7 +92,9 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
+            return res.status(400).json({
+                message: "Email and password are required"
+            });
         }
 
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -88,7 +103,9 @@ export const login = async (req, res) => {
         });
 
         if (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({
+                error: error.message
+            });
         }
 
         const { data: profile } = await supabase
@@ -110,7 +127,9 @@ export const login = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message
+        });
     }
 };
 
@@ -121,7 +140,19 @@ export const googleLogin = async (req, res) => {
     try {
         const { user } = req.body;
 
+        if (!user) {
+            return res.status(400).json({
+                message: "User object is required"
+            });
+        }
+
         const { id, email, user_metadata } = user;
+
+        if (!id || !email) {
+            return res.status(400).json({
+                message: "Invalid user data"
+            });
+        }
 
         const { data: existing } = await supabase
             .from("profiles")
@@ -130,7 +161,7 @@ export const googleLogin = async (req, res) => {
             .maybeSingle();
 
         if (!existing) {
-            await supabase.from("profiles").insert([
+            const { error } = await supabase.from("profiles").insert([
                 {
                     id,
                     email,
@@ -139,6 +170,12 @@ export const googleLogin = async (req, res) => {
                     role: "student"
                 }
             ]);
+
+            if (error) {
+                return res.status(400).json({
+                    error: error.message
+                });
+            }
         }
 
         const { data: profile } = await supabase
@@ -159,7 +196,9 @@ export const googleLogin = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message
+        });
     }
 };
 
@@ -170,18 +209,32 @@ export const getMe = async (req, res) => {
     try {
         const userId = req.profile?.id;
 
+        if (!userId) {
+            return res.status(401).json({
+                error: "Unauthorized"
+            });
+        }
+
         const { data, error } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", userId)
             .maybeSingle();
 
-        if (error) return res.status(400).json({ error: error.message });
+        if (error) {
+            return res.status(400).json({
+                error: error.message
+            });
+        }
 
-        return res.status(200).json({ user: data });
+        return res.status(200).json({
+            user: data
+        });
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message
+        });
     }
 };
 
@@ -192,6 +245,12 @@ export const updateProfile = async (req, res) => {
     try {
         const userId = req.profile?.id;
 
+        if (!userId) {
+            return res.status(401).json({
+                error: "Unauthorized"
+            });
+        }
+
         const updates = req.body;
 
         const { error } = await supabase
@@ -200,7 +259,9 @@ export const updateProfile = async (req, res) => {
             .eq("id", userId);
 
         if (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(400).json({
+                error: error.message
+            });
         }
 
         const { data } = await supabase
@@ -215,51 +276,50 @@ export const updateProfile = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message
+        });
     }
 };
 
 
-/* ───────────────────────── UPLOAD AVATAR (FIXED) ───────────────────────── */
 
 export const uploadAvatar = async (req, res) => {
     try {
         const userId = req.user.id;
         const file = req.file;
 
-        console.log("REQ FILE:", file);
-
         if (!file) {
             return res.status(400).json({ message: "No file uploaded" });
         }
 
-        const fileName = `${userId}-${Date.now()}.jpg`;
+        const fileName = `${userId}-${Date.now()}`;
 
-        const fileBody = new Uint8Array(file.buffer);
-
+        // 1️⃣ upload to Supabase Storage
         const { error } = await supabaseAdmin.storage
             .from("avatars")
-            .upload(fileName, fileBody, {
-                contentType: file.mimetype,
-                upsert: true
+            .upload(fileName, file.buffer, {
+                contentType: file.mimetype
             });
 
         if (error) {
             return res.status(400).json({ error: error.message });
         }
 
+        // 2️⃣ get public URL
         const { data } = supabaseAdmin.storage
             .from("avatars")
             .getPublicUrl(fileName);
 
         const avatarUrl = data.publicUrl;
 
+        // 3️⃣ update profile
         await supabaseAdmin
             .from("profiles")
             .update({ avatar_url: avatarUrl })
             .eq("id", userId);
 
-        return res.status(200).json({
+        return res.json({
             message: "Avatar uploaded successfully",
             avatar_url: avatarUrl
         });
@@ -268,3 +328,7 @@ export const uploadAvatar = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
+
+
+
