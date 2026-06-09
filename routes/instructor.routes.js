@@ -2,6 +2,7 @@ import express from "express";
 import { protect } from "../middlewares/auth.middleware.js";
 import { authorize } from "../middlewares/authorize.middleware.js";
 
+
 import {
     getInstructorDashboard,
     getInstructorCourses,
@@ -10,8 +11,10 @@ import {
 } from "../controllers/instructor.controller.js";
 
 const router = express.Router();
-
-
+console.log("dashboard:", typeof getInstructorDashboard);
+console.log("courses:", typeof getInstructorCourses);
+console.log("summary:", typeof getInstructorCoursesSummary);
+console.log("activity:", typeof getInstructorActivity);
 // ======================
 // TAGS
 // ======================
@@ -85,6 +88,7 @@ router.get(
  *       403:
  *         description: Forbidden
  */
+
 router.get(
     "/courses",
     protect,

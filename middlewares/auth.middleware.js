@@ -5,7 +5,8 @@ export const protect = async (req, res, next) => {
     // console.log("🔥 PROTECT HIT");
     try {
 
-
+        console.log("USER ID:", data.user.id);
+        console.log("PROFILE:", profile);
         const authHeader = req.headers.authorization;
 
         console.log("AUTH HEADER:", req.headers.authorization);
