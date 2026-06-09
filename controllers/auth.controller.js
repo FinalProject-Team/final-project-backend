@@ -284,4 +284,51 @@ export const updateProfile = async (req, res) => {
 
 
 
+export const uploadAvatar = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const fileName = `${userId}-${Date.now()}`;
+
+        // 1️⃣ upload to Supabase Storage
+        const { error } = await supabaseAdmin.storage
+            .from("avatars")
+            .upload(fileName, file.buffer, {
+                contentType: file.mimetype
+            });
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        // 2️⃣ get public URL
+        const { data } = supabaseAdmin.storage
+            .from("avatars")
+            .getPublicUrl(fileName);
+
+        const avatarUrl = data.publicUrl;
+
+        // 3️⃣ update profile
+        await supabaseAdmin
+            .from("profiles")
+            .update({ avatar_url: avatarUrl })
+            .eq("id", userId);
+
+        return res.json({
+            message: "Avatar uploaded successfully",
+            avatar_url: avatarUrl
+        });
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+
+
 

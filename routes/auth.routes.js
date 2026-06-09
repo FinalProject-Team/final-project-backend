@@ -191,6 +191,54 @@ router.get("/me", protect, getMe);
 router.put("/profile", protect, updateProfile);
 
 
+
+/**
+ * @swagger
+ * /api/profile/upload-avatar:
+ *   post:
+ *     summary: Upload user avatar image
+ *     description: Uploads a profile image and updates the user's avatar_url in profiles table.
+ *     tags:
+ *       - Profile
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *                 description: Profile image file (jpg, png, webp)
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 avatar_url:
+ *                   type: string
+ *       400:
+ *         description: Bad request (no file or upload error)
+ *       500:
+ *         description: Server error
+ */
+
+router.post(
+    "/upload-avatar",
+    protect,
+    upload.single("avatar"),
+    uploadAvatar
+);
+
+
 router.get("/test", (req, res) => {
     res.json({ message: "AUTH ROUTES WORKING" });
 });
