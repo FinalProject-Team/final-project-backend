@@ -2,10 +2,13 @@ import { supabaseAdmin } from "../config/supabase.js";
 
 export const checkEnrollment = async (req, res, next) => {
     try {
+        const user = req.user;
+        console.log("USER FROM TOKEN:", user);
 
-        const userId = req.user.id;
-
-        // const { courseId } = req.params;
+        if (["instructor", "admin"].includes(user.role)) {
+            return next();
+        }
+        const userId = user.id;
         const { id: courseId } = req.params;
 
         const { data: enrollment, error } = await supabaseAdmin
@@ -16,9 +19,7 @@ export const checkEnrollment = async (req, res, next) => {
             .maybeSingle();
 
         if (error) {
-            return res.status(400).json({
-                error: error.message
-            });
+            return res.status(400).json({ error: error.message });
         }
 
         if (!enrollment) {
@@ -30,10 +31,46 @@ export const checkEnrollment = async (req, res, next) => {
         next();
 
     } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
+        res.status(500).json({ error: error.message });
     }
 };
+
+// export const checkEnrollment = async (req, res, next) => {
+
+
+//     try {
+
+//         const userId = req.user.id;
+
+//         // const { courseId } = req.params;
+//         const { id: courseId } = req.params;
+
+//         const { data: enrollment, error } = await supabaseAdmin
+//             .from("enrollments")
+//             .select("*")
+//             .eq("user_id", userId)
+//             .eq("course_id", courseId)
+//             .maybeSingle();
+
+//         if (error) {
+//             return res.status(400).json({
+//                 error: error.message
+//             });
+//         }
+
+//         if (!enrollment) {
+//             return res.status(403).json({
+//                 error: "Access denied. Enroll first."
+//             });
+//         }
+
+//         next();
+
+//     } catch (error) {
+
+//         res.status(500).json({
+//             error: error.message
+//         });
+
+//     }
+// };

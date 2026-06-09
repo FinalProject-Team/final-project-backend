@@ -85,11 +85,7 @@ export const getInstructorCourses = async (req, res) => {
 ========================================= */
 export const createCourse = async (req, res) => {
     try {
-        // const courseData = {
-        //     ...req.body,
-        //     instructor_id: req.profile.id,
-        // };
-
+       
         const courseData = {
             title: req.body.title,
             description: req.body.description,

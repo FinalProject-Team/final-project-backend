@@ -12,6 +12,7 @@ import { protect } from "../middlewares/auth.middleware.js";
 import { authorize } from "../middlewares/authorize.middleware.js";
 import { checkEnrollment } from "../middlewares/checkEnrollment.js";
 import { lessonOwner } from "../middlewares/lessonOwner.middleware.js";
+import { allowInstructorOrEnrolled } from "../middlewares/allowInstructorOrEnrolled.js";
 
 const router = express.Router();
 
@@ -68,7 +69,39 @@ router.get("/test", (req, res) => {
 router.get(
     "/course/:id",
     protect,
-    checkEnrollment,
+    allowInstructorOrEnrolled,
+    getCourseLessons
+);
+
+
+
+/**
+ * ========================
+ * GET COURSE LESSONS (INSTRUCTOR)
+ * ========================
+ */
+/**
+ * @swagger
+ * /api/lessons/instructor/course/{id}:
+ *   get:
+ *     summary: Get all lessons for instructor (no enrollment required)
+ *     tags: [Lessons]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.get(
+    "/instructor/course/:id",
+    protect,
+    authorize("admin", "instructor"),
     getCourseLessons
 );
 
