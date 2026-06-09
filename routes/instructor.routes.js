@@ -12,10 +12,7 @@ import {
 
 
 const router = express.Router();
-console.log("dashboard:", typeof getInstructorDashboard);
-console.log("courses:", typeof getInstructorCourses);
-console.log("summary:", typeof getInstructorCoursesSummary);
-console.log("activity:", typeof getInstructorActivity);
+
 // ======================
 // TAGS
 // ======================

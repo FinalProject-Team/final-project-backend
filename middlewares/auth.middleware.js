@@ -1,15 +1,9 @@
 
-// import supabase from "../config/supabase.js";
 import supabase, { supabaseAdmin } from "../config/supabase.js";
 export const protect = async (req, res, next) => {
-    // console.log("🔥 PROTECT HIT");
     try {
-
-        // console.log("USER ID:", data.user.id);
-        // console.log("PROFILE:", profile);
         const authHeader = req.headers.authorization;
 
-        console.log("AUTH HEADER:", req.headers.authorization);
         if (!authHeader?.startsWith("Bearer ")) {
             return res.status(401).json({
                 message: "Unauthorized"

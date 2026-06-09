@@ -3,7 +3,6 @@ import { supabaseAdmin } from "../config/supabase.js";
 export const checkEnrollment = async (req, res, next) => {
     try {
         const user = req.user;
-        console.log("USER FROM TOKEN:", user);
 
         if (["instructor", "admin"].includes(user.role)) {
             return next();
