@@ -1,11 +1,13 @@
 import express from "express";
+import { upload } from "../middlewares/upload.js";
 
 import {
     register,
     login,
     getMe,
     updateProfile,
-    googleLogin
+    googleLogin,
+    uploadAvatar
 } from "../controllers/auth.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
