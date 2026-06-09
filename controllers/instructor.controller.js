@@ -1,51 +1,16 @@
 import supabase from "../config/supabase.js";
 
-// export const getInstructorDashboard = async (req, res) => {
-//     try {
-//         const instructorId = req.profile.id;
-
-//         // 1. Get instructor courses
-//         const { data: courses, error: coursesError } = await supabase
-//             .from("courses")
-//             .select("id")
-//             .eq("instructor_id", instructorId);
-
-//         if (coursesError) throw coursesError;
-
-//         const courseIds = courses.map(c => c.id);
-
-//         // 2. Get lessons count
-//         const { count: lessonsCount } = await supabase
-//             .from("lessons")
-//             .select("*", { count: "exact", head: true })
-//             .in("course_id", courseIds);
-
-//         // 3. Get enrollments count
-//         const { count: studentsCount } = await supabase
-//             .from("enrollments")
-//             .select("*", { count: "exact", head: true })
-//             .in("course_id", courseIds);
-
-//         res.json({
-//             totalCourses: courses.length,
-//             totalLessons: lessonsCount || 0,
-//             totalStudents: studentsCount || 0
-//         });
-
-//     } catch (err) {
-//         res.status(500).json({
-//             error: err.message
-//         });
-//     }
-// };
-
-// import supabase from "../config/supabase.js";
-
+/* =========================
+   DASHBOARD
+========================= */
 export const getInstructorDashboard = async (req, res) => {
     try {
-        const instructorId = req.profile.id;
+        const instructorId = req.profile?.id;
 
-        // 1. Get instructor courses
+        if (!instructorId) {
+            return res.status(403).json({ error: "No instructor profile found" });
+        }
+
         const { data: courses, error: coursesError } = await supabase
             .from("courses")
             .select("id")
@@ -53,15 +18,12 @@ export const getInstructorDashboard = async (req, res) => {
 
         if (coursesError) throw coursesError;
 
-        const courseIds = courses.map(c => c.id);
+        const courseIds = courses?.map(c => c.id) || [];
 
-        // 2. Default values (important fix)
         let lessonsCount = 0;
         let studentsCount = 0;
 
-        // 3. Only query if courses exist
         if (courseIds.length > 0) {
-
             const { count: lCount, error: lessonsError } = await supabase
                 .from("lessons")
                 .select("*", { count: "exact", head: true })
@@ -93,42 +55,39 @@ export const getInstructorDashboard = async (req, res) => {
     }
 };
 
-
-// export const getInstructorCourses = async (req, res) => {
-//     try {
-//         const instructorId = req.profile.id;
-
-//         const { data, error } = await supabase
-//             .from("courses")
-//             .select("id, title, price, created_at")
-//             .eq("instructor_id", instructorId);
-
-//         if (error) throw error;
-
-//         res.json(data);
-
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// };
-
+/* =========================
+   GET COURSES
+========================= */
 export const getInstructorCourses = async (req, res) => {
-    const instructorId = req.user.id; // أو من params
+    try {
+        const instructorId = req.profile?.id;
 
-    const { data, error } = await supabase
-        .from("courses")
-        .select("*")
-        .eq("instructor_id", instructorId);
+        if (!instructorId) {
+            return res.status(403).json({ error: "No instructor profile found" });
+        }
 
-    if (error) {
-        return res.status(400).json({ error: error.message });
+        const { data: courses, error } = await supabase
+            .from("courses")
+            .select("*")
+            .eq("instructor_id", instructorId);
+
+        if (error) throw error;
+
+        return res.json(courses || []);
+
+    } catch (err) {
+        return res.status(500).json({
+            error: err.message
+        });
     }
-
-    return res.json(data);
 };
+
+/* =========================
+   COURSES SUMMARY
+========================= */
 export const getInstructorCoursesSummary = async (req, res) => {
     try {
-        const instructorId = req.profile.id;
+        const instructorId = req.profile?.id;
 
         const { data: courses, error } = await supabase
             .from("courses")
@@ -141,8 +100,10 @@ export const getInstructorCoursesSummary = async (req, res) => {
             .from("lessons")
             .select("course_id");
 
-        const summary = courses.map(course => {
-            const count = lessons.filter(
+        const safeLessons = lessons || [];
+
+        const summary = (courses || []).map(course => {
+            const count = safeLessons.filter(
                 l => l.course_id === course.id
             ).length;
 
@@ -152,32 +113,33 @@ export const getInstructorCoursesSummary = async (req, res) => {
             };
         });
 
-        res.json(summary);
+        return res.json(summary);
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: err.message });
     }
 };
 
-
+/* =========================
+   ACTIVITY
+========================= */
 export const getInstructorActivity = async (req, res) => {
     try {
-        const instructorId = req.profile.id;
+        const instructorId = req.profile?.id;
 
-        // 1. Get instructor courses
-        const { data: courses, error: coursesError } = await supabase
+        const { data: courses, error } = await supabase
             .from("courses")
             .select("id, title, created_at")
             .eq("instructor_id", instructorId);
 
-        if (coursesError) throw coursesError;
+        if (error) throw error;
 
-        const courseIds = courses.map(c => c.id);
+        const safeCourses = courses || [];
+        const courseIds = safeCourses.map(c => c.id);
 
         let activities = [];
 
-        // 2. Course created activity
-        courses.forEach(course => {
+        safeCourses.forEach(course => {
             activities.push({
                 type: "course",
                 message: `New course created: ${course.title}`,
@@ -187,10 +149,14 @@ export const getInstructorActivity = async (req, res) => {
 
         if (courseIds.length > 0) {
 
-            // 3. Lessons activity
             const { data: lessons } = await supabase
                 .from("lessons")
                 .select("title, created_at, course_id")
+                .in("course_id", courseIds);
+
+            const { data: enrollments } = await supabase
+                .from("enrollments")
+                .select("created_at, course_id")
                 .in("course_id", courseIds);
 
             lessons?.forEach(lesson => {
@@ -201,12 +167,6 @@ export const getInstructorActivity = async (req, res) => {
                 });
             });
 
-            // 4. Enrollments activity
-            const { data: enrollments } = await supabase
-                .from("enrollments")
-                .select("created_at, course_id")
-                .in("course_id", courseIds);
-
             enrollments?.forEach(enroll => {
                 activities.push({
                     type: "enrollment",
@@ -216,12 +176,10 @@ export const getInstructorActivity = async (req, res) => {
             });
         }
 
-        // 5. Sort by newest first
-        activities.sort((a, b) =>
-            new Date(b.created_at) - new Date(a.created_at)
+        activities.sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
 
-        // 6. return latest 10 only
         return res.json(activities.slice(0, 10));
 
     } catch (err) {

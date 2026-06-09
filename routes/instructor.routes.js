@@ -10,6 +10,7 @@ import {
     getInstructorActivity
 } from "../controllers/instructor.controller.js";
 
+
 const router = express.Router();
 console.log("dashboard:", typeof getInstructorDashboard);
 console.log("courses:", typeof getInstructorCourses);
