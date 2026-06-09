@@ -85,10 +85,19 @@ export const getInstructorCourses = async (req, res) => {
 ========================================= */
 export const createCourse = async (req, res) => {
     try {
+        // const courseData = {
+        //     ...req.body,
+        //     instructor_id: req.profile.id,
+        // };
+
         const courseData = {
-            ...req.body,
+            title: req.body.title,
+            description: req.body.description,
+            price: req.body.price,
+            level: req.body.level,
             instructor_id: req.profile.id,
         };
+        console.log(req.body);
 
         const { data, error } = await supabaseAdmin
             .from("courses")
