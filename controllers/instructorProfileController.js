@@ -61,11 +61,24 @@ export const getMyInstructorProfile = async (req, res) => {
             lessonsCount = count || 0;
         }
 
-        // 6️ final response
+        // 6️ get students count (enrollments)
+        let studentsCount = 0;
+
+        if (courseIds.length > 0) {
+            const { count } = await supabase
+                .from("enrollments")
+                .select("*", { count: "exact", head: true })
+                .in("course_id", courseIds);
+
+            studentsCount = count || 0;
+        }
+
+        // 7️ final response
         return res.json({
             ...profile,
             courses_count: coursesCount || 0,
-            lessons_count: lessonsCount
+            lessons_count: lessonsCount,
+            students_count: studentsCount
         });
 
     } catch (err) {
