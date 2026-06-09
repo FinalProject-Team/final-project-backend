@@ -4,8 +4,10 @@ export const getMyInstructorProfile = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        console.log("REQ USER:", req.user);        // 👈 هنا
+        console.log("REQ USER:", req.user);
         console.log("USER ID:", req.user?.id);
+
+        // 1️ get instructor profile
         const { data, error } = await supabase
             .from("instructor_profiles")
             .select("*")
@@ -16,24 +18,61 @@ export const getMyInstructorProfile = async (req, res) => {
             return res.status(400).json({ error: error.message });
         }
 
-        if (data) return res.json(data);
+        // 2️ create profile if not exists
+        let profile = data;
 
-        const { data: newProfile, error: insertError } = await supabase
-            .from("instructor_profiles")
-            .insert({ id: userId })
-            .select()
-            .single();
+        if (!profile) {
+            const { data: newProfile, error: insertError } = await supabase
+                .from("instructor_profiles")
+                .insert([{ id: userId }])
+                .select()
+                .single();
 
-        if (insertError) {
-            return res.status(400).json({ error: insertError.message });
+            if (insertError) {
+                return res.status(400).json({ error: insertError.message });
+            }
+
+            profile = newProfile;
         }
 
-        return res.json(newProfile);
+        // 3️ get courses count
+        const { count: coursesCount } = await supabase
+            .from("courses")
+            .select("*", { count: "exact", head: true })
+            .eq("instructor_id", userId);
+
+        // 4️ get course ids
+        const { data: courses } = await supabase
+            .from("courses")
+            .select("id")
+            .eq("instructor_id", userId);
+
+        const courseIds = courses?.map(c => c.id) || [];
+
+        // 5️ get lessons count
+        let lessonsCount = 0;
+
+        if (courseIds.length > 0) {
+            const { count } = await supabase
+                .from("lessons")
+                .select("*", { count: "exact", head: true })
+                .in("course_id", courseIds);
+
+            lessonsCount = count || 0;
+        }
+
+        // 6️ final response
+        return res.json({
+            ...profile,
+            courses_count: coursesCount || 0,
+            lessons_count: lessonsCount
+        });
 
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
 };
+
 export const updateInstructorProfile = async (req, res) => {
     try {
         const userId = req.user.id;
