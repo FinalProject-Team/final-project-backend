@@ -13,13 +13,17 @@ import {
 import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
+
 console.log("AUTH ROUTES LOADED");
+
 /**
  * @swagger
  * tags:
  *   name: Auth
  *   description: Authentication APIs
  */
+
+/* ───────────────────────── REGISTER ───────────────────────── */
 
 /**
  * @swagger
@@ -55,6 +59,8 @@ console.log("AUTH ROUTES LOADED");
  */
 router.post("/register", register);
 
+/* ───────────────────────── LOGIN ───────────────────────── */
+
 /**
  * @swagger
  * /api/auth/login:
@@ -85,6 +91,8 @@ router.post("/register", register);
  */
 router.post("/login", login);
 
+/* ───────────────────────── GOOGLE LOGIN ───────────────────────── */
+
 /**
  * @swagger
  * /api/auth/google-login:
@@ -104,49 +112,16 @@ router.post("/login", login);
  *             properties:
  *               user:
  *                 type: object
- *                 description: Supabase authenticated user object
- *                 properties:
- *                   id:
- *                     type: string
- *                     example: "123456789"
- *                   email:
- *                     type: string
- *                     example: "hager@gmail.com"
- *                   user_metadata:
- *                     type: object
- *                     properties:
- *                       full_name:
- *                         type: string
- *                         example: "Hager Nady"
- *                       avatar_url:
- *                         type: string
- *                         example: "https://..."
  *     responses:
  *       200:
  *         description: User synced successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     email:
- *                       type: string
- *                     full_name:
- *                       type: string
- *                     role:
- *                       type: string
- *                       example: "user"
  *       400:
- *         description: Bad request (missing user data)
- *       500:
- *         description: Server error
+ *         description: Bad request
  */
 router.post("/google-login", googleLogin);
+
+/* ───────────────────────── GET ME ───────────────────────── */
+
 /**
  * @swagger
  * /api/auth/me:
@@ -163,6 +138,8 @@ router.post("/google-login", googleLogin);
  */
 router.get("/me", protect, getMe);
 
+/* ───────────────────────── UPDATE PROFILE ───────────────────────── */
+
 /**
  * @swagger
  * /api/auth/profile:
@@ -178,12 +155,8 @@ router.get("/me", protect, getMe);
  *           schema:
  *             type: object
  *             properties:
- *               name:
- *                 type: string
- *                 example: Hager Nady
  *               bio:
  *                 type: string
- *                 example: Frontend Developer
  *     responses:
  *       200:
  *         description: Profile updated successfully
@@ -192,16 +165,14 @@ router.get("/me", protect, getMe);
  */
 router.put("/profile", protect, updateProfile);
 
-
+/* ───────────────────────── UPLOAD AVATAR ───────────────────────── */
 
 /**
  * @swagger
- * /api/profile/upload-avatar:
+ * /api/auth/upload-avatar:
  *   post:
  *     summary: Upload user avatar image
- *     description: Uploads a profile image and updates the user's avatar_url in profiles table.
- *     tags:
- *       - Profile
+ *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -214,25 +185,14 @@ router.put("/profile", protect, updateProfile);
  *               avatar:
  *                 type: string
  *                 format: binary
- *                 description: Profile image file (jpg, png, webp)
  *     responses:
  *       200:
  *         description: Avatar uploaded successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 avatar_url:
- *                   type: string
  *       400:
- *         description: Bad request (no file or upload error)
+ *         description: No file uploaded
  *       500:
  *         description: Server error
  */
-
 router.post(
     "/upload-avatar",
     protect,
@@ -240,9 +200,10 @@ router.post(
     uploadAvatar
 );
 
+/* ───────────────────────── TEST ROUTE ───────────────────────── */
+
 router.get("/test", (req, res) => {
     res.json({ message: "AUTH ROUTES WORKING" });
 });
+
 export default router;
-
-
