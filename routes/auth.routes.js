@@ -238,7 +238,6 @@ router.post(
     uploadAvatar
 );
 
-
 router.get("/test", (req, res) => {
     res.json({ message: "AUTH ROUTES WORKING" });
 });
