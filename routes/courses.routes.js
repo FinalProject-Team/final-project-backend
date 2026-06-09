@@ -12,8 +12,7 @@ import {
     getSingleCourse,
     createCourse,
     updateCourse,
-    deleteCourse,
-    getInstructorCourses
+    deleteCourse
 } from "../controllers/courses.controller.js";
 
 const router = express.Router();
@@ -107,26 +106,26 @@ router.get(
 // INSTRUCTOR COURSES
 // =========================
 
-/**
- * @swagger
- * /api/courses/instructor/my-courses:
- *   get:
- *     summary: Get instructor courses
- *     tags: [Courses]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Success
- *       401:
- *         description: Unauthorized
- */
-router.get(
-    "/instructor/my-courses",
-    protect,
-    authorize("instructor"),
-    getInstructorCourses
-);
+// /**
+//  * @swagger
+//  * /api/courses/instructor/my-courses:
+//  *   get:
+//  *     summary: Get instructor courses
+//  *     tags: [Courses]
+//  *     security:
+//  *       - bearerAuth: []
+//  *     responses:
+//  *       200:
+//  *         description: Success
+//  *       401:
+//  *         description: Unauthorized
+//  */
+// router.get(
+//     "/instructor/my-courses",
+//     protect,
+//     authorize("instructor"),
+//     getInstructorCourses
+// );
 
 
 // =========================

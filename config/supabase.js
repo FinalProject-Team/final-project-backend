@@ -1,27 +1,18 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import ws from "ws";
 
 dotenv.config();
 
-const supabaseConfig = {
-    realtime: {
-        transport: ws
-    }
-};
-
 // public client
-const supabase = createClient(
+export const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY,
-    supabaseConfig
+    process.env.SUPABASE_ANON_KEY
 );
 
 // admin client
 export const supabaseAdmin = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    supabaseConfig
+    process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export default supabase;

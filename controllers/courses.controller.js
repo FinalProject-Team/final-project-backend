@@ -57,28 +57,6 @@ export const getSingleCourse = async (req, res) => {
     res.json(data);
 };
 
-/* =========================================
-   GET INSTRUCTOR COURSES (NEW - FIXED)
-========================================= */
-export const getInstructorCourses = async (req, res) => {
-    try {
-        const instructorId = req.profile.id;
-
-        const { data, error } = await supabase
-            .from("courses")
-            .select("*")
-            .eq("instructor_id", instructorId)
-            .order("created_at", { ascending: false });
-
-        if (error) {
-            return res.status(400).json({ error: error.message });
-        }
-
-        res.json(data);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
 
 /* =========================================
    CREATE COURSE + NOTIFICATION

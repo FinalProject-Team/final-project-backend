@@ -10,6 +10,7 @@ export const register = async (req, res) => {
             full_name,
             phone,
             confirmPassword,
+            role = "student"
         } = req.body;
 
         if (!email || !password || !full_name || !phone || !confirmPassword) {
@@ -18,7 +19,6 @@ export const register = async (req, res) => {
             });
         }
 
-        // check passwords match
         if (password !== confirmPassword) {
             return res.status(400).json({
                 message: "Passwords do not match"
@@ -38,6 +38,7 @@ export const register = async (req, res) => {
             });
         }
 
+        // create profile
         const { error: profileError } = await supabaseAdmin
             .from("profiles")
             .insert([
@@ -45,13 +46,9 @@ export const register = async (req, res) => {
                     id: data.user.id,
                     full_name,
                     phone,
-                    role: "student" // ✅ default role
+                    role
                 }
             ]);
-
-        if (role === "instructor") {
-            await createInstructorProfile(data.user.id);
-        }
 
         if (profileError) {
             return res.status(400).json({
@@ -59,32 +56,33 @@ export const register = async (req, res) => {
             });
         }
 
-        res.status(201).json({
+        // optional instructor profile
+        if (role === "instructor") {
+            await createInstructorProfile(data.user.id);
+        }
+
+        return res.status(201).json({
             message: "User registered successfully",
             user: data.user
         });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             error: error.message
         });
     }
 };
 
-
 const createInstructorProfile = async (userId) => {
     const { error } = await supabaseAdmin
         .from("instructor_profiles")
-        .insert([
-            {
-                id: userId
-            }
-        ]);
+        .insert([{ id: userId }]);
 
     if (error) {
         console.log("Instructor profile error:", error.message);
     }
 };
+
 
 /* ───────────────────────── LOGIN ───────────────────────── */
 
@@ -98,7 +96,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // 1️⃣ LOGIN FROM SUPABASE AUTH
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
@@ -110,25 +107,19 @@ export const login = async (req, res) => {
             });
         }
 
-        // 2️⃣ GET PROFILE (ROLE) FROM DATABASE
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", data.user.id)
             .maybeSingle();
 
-        if (profileError) {
-            console.log("Profile fetch error:", profileError.message);
-        }
-
-        // 3️⃣ RESPONSE (IMPORTANT PART)
         return res.status(200).json({
             message: "Login successful",
             data: {
                 user: {
                     ...data.user,
-                    role: profile?.role || "student",   // ✅ REAL ROLE
-                    profile: profile || null
+                    role: profile?.role || "student",
+                    profile
                 },
                 session: data.session
             }
@@ -141,6 +132,7 @@ export const login = async (req, res) => {
     }
 };
 
+
 /* ───────────────────────── GOOGLE LOGIN ───────────────────────── */
 
 export const googleLogin = async (req, res) => {
@@ -149,7 +141,7 @@ export const googleLogin = async (req, res) => {
 
         if (!user) {
             return res.status(400).json({
-                message: "User object is required",
+                message: "User object is required"
             });
         }
 
@@ -157,18 +149,16 @@ export const googleLogin = async (req, res) => {
 
         if (!id || !email) {
             return res.status(400).json({
-                message: "Invalid Supabase user",
+                message: "Invalid user data"
             });
         }
 
-        // 1️⃣ check if profile exists
         const { data: existing } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", id)
             .maybeSingle();
 
-        // 2️⃣ create if not exists
         if (!existing) {
             const { error } = await supabase.from("profiles").insert([
                 {
@@ -177,36 +167,22 @@ export const googleLogin = async (req, res) => {
                     full_name: user_metadata?.full_name || "No Name",
                     avatar_url: user_metadata?.avatar_url || "",
                     role: "student"
-                },
+                }
             ]);
 
             if (error) {
                 return res.status(400).json({
-                    message: "Insert failed",
-                    error: error.message,
+                    error: error.message
                 });
             }
         }
 
-        // 3️⃣ get final profile
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", id)
             .maybeSingle();
 
-        if (profileError) {
-            console.log("Profile fetch error:", profileError.message);
-        }
-
-        // 4️⃣ IMPORTANT: get session from Supabase user
-        const { data: sessionData, error: sessionError } =
-            await supabase.auth.admin.getUserById(id);
-
-        // (fallback if session not needed)
-        const session = null;
-
-        // 5️⃣ RETURN SAME FORMAT AS LOGIN
         return res.status(200).json({
             message: "User synced successfully",
             data: {
@@ -214,22 +190,29 @@ export const googleLogin = async (req, res) => {
                     ...profile,
                     role: profile?.role || "student"
                 },
-                session
+                session: null
             }
         });
 
     } catch (error) {
         return res.status(500).json({
-            message: error.message,
+            error: error.message
         });
     }
 };
+
 
 /* ───────────────────────── GET ME ───────────────────────── */
 
 export const getMe = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.profile?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                error: "Unauthorized"
+            });
+        }
 
         const { data, error } = await supabase
             .from("profiles")
@@ -244,41 +227,30 @@ export const getMe = async (req, res) => {
         }
 
         return res.status(200).json({
-            user: data   // ✅ unified format
+            user: data
         });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             error: error.message
         });
     }
 };
 
+
 /* ───────────────────────── UPDATE PROFILE ───────────────────────── */
 
 export const updateProfile = async (req, res) => {
     try {
-        const userId = req.user.id || req.user.sub;
+        const userId = req.profile?.id;
 
-        const {
-            full_name,
-            bio,
-            job_title,
-            portfolio,
-            username,
-            headline,
-            avatar_url
-        } = req.body;
+        if (!userId) {
+            return res.status(401).json({
+                error: "Unauthorized"
+            });
+        }
 
-        const updates = {};
-
-        if (full_name) updates.full_name = full_name;
-        if (bio) updates.bio = bio;
-        if (job_title) updates.job_title = job_title;
-        if (portfolio) updates.portfolio = portfolio;
-        if (username) updates.username = username;
-        if (headline) updates.headline = headline;
-        if (avatar_url) updates.avatar_url = avatar_url;
+        const updates = req.body;
 
         const { error } = await supabase
             .from("profiles")

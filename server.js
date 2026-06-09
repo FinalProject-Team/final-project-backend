@@ -70,16 +70,17 @@ setupSwagger(app);
 
 
 // Error Handler (يحمي السيرفر من crash)
+
+
 app.use((err, req, res, next) => {
-    console.error("ERROR:", err);
+    console.error("FULL ERROR:");
+    console.error(err);
 
     res.status(500).json({
-        success: false,
-        message: "Something went wrong",
-        error: process.env.NODE_ENV === "production" ? null : err.message
+        error: err.message,
+        stack: err.stack
     });
 });
-
 
 // Port
 const PORT = process.env.PORT || 5000;
