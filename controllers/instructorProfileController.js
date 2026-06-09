@@ -1,4 +1,5 @@
 import supabase from "../config/supabase.js";
+
 export const getMyInstructorProfile = async (req, res) => {
     try {
         const userId = req.user.id;
