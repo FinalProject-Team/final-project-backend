@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import supabaseAdmin from "../config/supabase.js";
+import { supabaseAdmin } from "../config/supabase.js";
 
 export const protect = async (req, res, next) => {
     try {
@@ -11,16 +11,10 @@ export const protect = async (req, res, next) => {
 
         const token = authHeader.split(" ")[1];
 
-        // 1. verify JWT
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        if (!decoded) {
-            return res.status(401).json({ message: "Invalid token" });
-        }
 
         req.user = decoded;
 
-        // 2. get profile from DB
         const { data: profile, error } = await supabaseAdmin
             .from("profiles")
             .select("*")
@@ -34,11 +28,10 @@ export const protect = async (req, res, next) => {
         req.profile = profile;
 
         next();
-
     } catch (err) {
         return res.status(401).json({
             message: "Unauthorized",
-            error: err.message
+            error: err.message,
         });
     }
 };
