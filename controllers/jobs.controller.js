@@ -1,5 +1,4 @@
-import { supabase } from "../config/supabase.js";
-
+import supabase, { supabaseAdmin } from "../config/supabase.js";
 
 // ========================
 // GET ALL JOBS
@@ -21,7 +20,7 @@ export const getJobs = async (req, res) => {
 // CREATE JOB
 // ========================
 export const createJob = async (req, res) => {
-    
+
     const userId = req.profile.id;
 
 
@@ -83,21 +82,25 @@ export const getJobById = async (req, res) => {
 // ========================
 // APPLY TO JOB (NO DUPLICATES)
 // ========================
+
+
 export const applyToJob = async (req, res) => {
     const userId = req.profile.id;
     const { job_id, cover_letter } = req.body;
 
     try {
-        const { data: job } = await supabase
+        // 1️⃣ check job exists
+        const { data: job, error: jobError } = await supabase
             .from("jobs")
             .select("id")
             .eq("id", job_id)
             .single();
 
-        if (!job) {
+        if (jobError || !job) {
             return res.status(404).json({ message: "Job not found" });
         }
 
+        // 2️⃣ check if already applied
         const { data: existing } = await supabase
             .from("job_applications")
             .select("id")
@@ -111,21 +114,33 @@ export const applyToJob = async (req, res) => {
             });
         }
 
-        const { data, error } = await supabase
+        // 3️⃣ INSERT (IMPORTANT FIX HERE 👇)
+        const { data, error } = await supabaseAdmin
             .from("job_applications")
             .insert({
                 job_id,
                 user_id: userId,
-                cover_letter,
+                cover_letter: cover_letter || null,
             })
             .select()
             .single();
 
-        if (error) return res.status(400).json({ error });
+        if (error) {
+            return res.status(400).json({
+                error: error.message,
+            });
+        }
 
-        res.json(data);
+        // 4️⃣ success response
+        return res.json({
+            message: "Applied successfully",
+            application: data,
+        });
+
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        return res.status(500).json({
+            message: err.message,
+        });
     }
 };
 

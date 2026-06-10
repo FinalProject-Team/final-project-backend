@@ -87,53 +87,80 @@ const createInstructorProfile = async (userId) => {
 
 /* ───────────────────────── LOGIN ───────────────────────── */
 
+// export const login = async (req, res) => {
+//     try {
+//         const { email, password } = req.body;
+
+//         if (!email || !password) {
+//             return res.status(400).json({
+//                 message: "Email and password are required"
+//             });
+//         }
+
+//         const { data, error } = await supabase.auth.signInWithPassword({
+//             email,
+//             password
+//         });
+
+//         if (error) {
+//             return res.status(400).json({
+//                 error: error.message
+//             });
+//         }
+
+//         const { data: profile } = await supabase
+//             .from("profiles")
+//             .select("*")
+//             .eq("id", data.user.id)
+//             .maybeSingle();
+
+//         return res.status(200).json({
+//             message: "Login successful",
+//             data: {
+//                 user: {
+//                     ...data.user,
+//                     role: profile?.role || "student",
+//                     profile
+//                 },
+//                 session: data.session
+//             }
+//         });
+
+//     } catch (error) {
+//         return res.status(500).json({
+//             error: error.message
+//         });
+//     }
+// };
+
+import jwt from "jsonwebtoken";
+
 export const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+    const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({
-                message: "Email and password are required"
-            });
-        }
+    // check user from DB (حسب نظامك)
+    const user = await db.users.findOne({ email });
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-
-        if (error) {
-            return res.status(400).json({
-                error: error.message
-            });
-        }
-
-        const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", data.user.id)
-            .maybeSingle();
-
-        return res.status(200).json({
-            message: "Login successful",
-            data: {
-                user: {
-                    ...data.user,
-                    role: profile?.role || "student",
-                    profile
-                },
-                session: data.session
-            }
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            error: error.message
-        });
+    if (!user || user.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    const token = jwt.sign(
+        {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+
+    res.json({
+        message: "Login successful",
+        token,
+        user,
+    });
 };
-
-
 /* ───────────────────────── GOOGLE LOGIN ───────────────────────── */
 
 export const googleLogin = async (req, res) => {

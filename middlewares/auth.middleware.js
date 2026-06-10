@@ -1,54 +1,44 @@
+import jwt from "jsonwebtoken";
+import supabaseAdmin from "../config/supabase.js";
 
-import supabase, { supabaseAdmin } from "../config/supabase.js";
 export const protect = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
 
-        if (!authHeader?.startsWith("Bearer ")) {
-            return res.status(401).json({
-                message: "Unauthorized"
-            });
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ message: "No token provided" });
         }
 
         const token = authHeader.split(" ")[1];
 
-        const { data, error } = await supabase.auth.getUser(token);
+        // 1. verify JWT
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        console.log("USER:", data);
-        console.log("ERROR:", error);
-
-        if (error || !data?.user) {
-            return res.status(401).json({
-                message: "Invalid token"
-            });
+        if (!decoded) {
+            return res.status(401).json({ message: "Invalid token" });
         }
 
-        // user
-        req.user = data.user;
+        req.user = decoded;
 
-        // profile
-        const { data: profile } = await supabaseAdmin
+        // 2. get profile from DB
+        const { data: profile, error } = await supabaseAdmin
             .from("profiles")
             .select("*")
-            .eq("id", data.user.id)
-            .maybeSingle();
+            .eq("id", decoded.id)
+            .single();
+
+        if (error || !profile) {
+            return res.status(403).json({ message: "Profile not found" });
+        }
 
         req.profile = profile;
-        console.log("REQ PROFILE:", req.profile);
-        if (!profile) {
-            return res.status(403).json({
-                message: "Profile not found"
-            });
-        }
 
         next();
 
     } catch (err) {
-
-        res.status(500).json({
+        return res.status(401).json({
+            message: "Unauthorized",
             error: err.message
         });
-
     }
-
 };
