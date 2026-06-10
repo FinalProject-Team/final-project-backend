@@ -6,7 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import coursesRoutes from "./routes/courses.routes.js";
 import enrollmentsRoutes from "./routes/enrollments.routes.js";
 import progressRoutes from "./routes/progress.routes.js";
-import jobsRoutes from "./routes/jobs.routes.js";
+// import jobsRoutes from "./routes/jobs.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
 import rankingRoutes from "./routes/ranking.routes.js";
 import { setupSwagger } from "./config/swagger.js";
@@ -17,6 +17,7 @@ import adminRoutes from "./routes/admin.routes.js";
 import liveSessionsRoutes from "./routes/liveSessions.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
 import instructorProfileRoutes from "./routes/instructorProfileRoutes.js";
+import jobsRoutes from "./routes/jobs.routes.js";
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ app.use("/api/courses", coursesRoutes);
 app.use("/api/enrollments", enrollmentsRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/jobs", jobsRoutes);
+
 app.use("/api/projects", projectsRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/roadmap", roadmapRoutes);

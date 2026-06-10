@@ -1,9 +1,12 @@
 import express from "express";
-
 import {
     getJobs,
-    getSingleJob,
+    createJob,
+    getJobById,
     applyToJob,
+    getJobApplicants,
+    updateApplicationStatus,
+    getMyJobs,
     getMyApplications,
 } from "../controllers/jobs.controller.js";
 
@@ -11,93 +14,241 @@ import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+
+// =====================================================
+// DASHBOARD ROUTES
+// =====================================================
+
 /**
  * @swagger
- * tags:
- *   name: Jobs
- *   description: Jobs APIs
+ * /api/jobs/my/jobs:
+ *   get:
+ *     summary: Get jobs created by current user
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user jobs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
  */
+router.get("/my/jobs", protect, getMyJobs);
+
+
+/**
+ * @swagger
+ * /api/jobs/my/applications:
+ *   get:
+ *     summary: Get applications of current user
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user applications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ */
+router.get("/my/applications", protect, getMyApplications);
+
+
+// =====================================================
+// JOBS ROUTES
+// =====================================================
 
 /**
  * @swagger
  * /api/jobs:
  *   get:
- *     summary: Get all jobs
+ *     summary: Get all active jobs
  *     tags: [Jobs]
  *     responses:
  *       200:
- *         description: List of all jobs
+ *         description: List of jobs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
  */
 router.get("/", getJobs);
 
-/**
- * @swagger
- * /api/jobs/my-applications:
- *   get:
- *     summary: Get current user applications
- *     tags: [Jobs]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User applications retrieved successfully
- *       401:
- *         description: Unauthorized
- */
-router.get(
-    "/my-applications",
-    protect,
-    getMyApplications
-);
 
 /**
  * @swagger
- * /api/jobs/{id}:
+ * /api/jobs/{jobId}:
  *   get:
- *     summary: Get single job
+ *     summary: Get single job by ID
  *     tags: [Jobs]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobId
  *         required: true
  *         schema:
  *           type: string
- *         example: 123
  *     responses:
  *       200:
- *         description: Single job retrieved successfully
- *       404:
- *         description: Job not found
+ *         description: Job details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
  */
-router.get("/:id", getSingleJob);
+router.get("/:jobId", getJobById);
+
 
 /**
  * @swagger
- * /api/jobs/{id}/apply:
+ * /api/jobs:
+ *   post:
+ *     summary: Create a new job
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               company:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               salary:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               job_type:
+ *                 type: string
+ *               skills:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               budget:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Job created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.post("/", protect, createJob);
+
+
+// =====================================================
+// APPLICATIONS ROUTES
+// =====================================================
+
+/**
+ * @swagger
+ * /api/jobs/apply:
  *   post:
  *     summary: Apply to a job
- *     tags: [Jobs]
+ *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               job_id:
+ *                 type: string
+ *               cover_letter:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Application submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.post("/apply", protect, applyToJob);
+
+
+/**
+ * @swagger
+ * /api/jobs/{jobId}/applicants:
+ *   get:
+ *     summary: Get applicants for a job (owner only)
+ *     tags: [Applications]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobId
  *         required: true
  *         schema:
  *           type: string
- *         example: 123
  *     responses:
  *       200:
- *         description: Applied successfully
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Job not found
+ *         description: List of applicants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
  */
-router.post(
-    "/:id/apply",
+router.get("/:jobId/applicants", protect, getJobApplicants);
+
+
+/**
+ * @swagger
+ * /api/jobs/applications/{applicationId}/status:
+ *   patch:
+ *     summary: Accept or reject application
+ *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: applicationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 example: accepted
+ *     responses:
+ *       200:
+ *         description: Status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.patch(
+    "/applications/:applicationId/status",
     protect,
-    applyToJob
+    updateApplicationStatus
 );
+
 
 export default router;

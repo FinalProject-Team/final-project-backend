@@ -1,187 +1,268 @@
-import { supabaseAdmin } from "../config/supabase.js";
+import { supabase } from "../config/supabase.js";
 
+
+// ========================
+// GET ALL JOBS
+// ========================
 export const getJobs = async (req, res) => {
+    const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
 
-    try {
+    if (error) return res.status(400).json({ error });
 
-        const { search, location, type } = req.query;
-
-        let query = supabaseAdmin
-            .from("jobs")
-            .select("*")
-            .order("created_at", { ascending: false });
-
-        // search
-        if (search) {
-            query = query.ilike("title", `%${search}%`);
-        }
-
-        // location filter
-        if (location) {
-            query = query.ilike("location", `%${location}%`);
-        }
-
-        // job type filter
-        if (type) {
-            query = query.eq("job_type", type);
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-            return res.status(400).json({
-                error: error.message
-            });
-        }
-
-        res.status(200).json(data);
-
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
-    }
-
+    res.json(data);
 };
 
-export const getSingleJob = async (req, res) => {
 
-    try {
+// ========================
+// CREATE JOB
+// ========================
+export const createJob = async (req, res) => {
+    
+    const userId = req.profile.id;
 
-        const { id } = req.params;
 
-        const { data, error } = await supabaseAdmin
-            .from("jobs")
-            .select("*")
-            .eq("id", id)
-            .single();
 
-        if (error) {
-            return res.status(404).json({
-                error: "Job not found"
-            });
-        }
+    const {
+        title,
+        company,
+        location,
+        salary,
+        description,
+        job_type,
+        skills,
+        budget,
+    } = req.body;
 
-        res.status(200).json(data);
+    const { data, error } = await supabase
+        .from("jobs")
+        .insert({
+            title,
+            company,
+            location,
+            salary,
+            description,
+            job_type,
+            skills,
+            budget,
+            posted_by: userId, // 🔥 ده أهم سطر
+        })
+        .select()
+        .single();
 
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
+    if (error) {
+        console.log("CREATE JOB ERROR:", error);
+        return res.status(400).json({ error });
     }
 
+    res.json(data);
 };
 
+
+// ========================
+// GET SINGLE JOB
+// ========================
+export const getJobById = async (req, res) => {
+    const { jobId } = req.params;
+
+    const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("id", jobId)
+        .single();
+
+    if (error) return res.status(400).json({ error });
+
+    res.json(data);
+};
+
+
+// ========================
+// APPLY TO JOB (NO DUPLICATES)
+// ========================
 export const applyToJob = async (req, res) => {
+    const userId = req.profile.id;
+    const { job_id, cover_letter } = req.body;
 
     try {
-
-        const userId = req.user.id;
-
-        const { id } = req.params;
-
-        // check if job exists
-        const { data: job } = await supabaseAdmin
+        const { data: job } = await supabase
             .from("jobs")
-            .select("*")
-            .eq("id", id)
+            .select("id")
+            .eq("id", job_id)
             .single();
 
         if (!job) {
-            return res.status(404).json({
-                error: "Job not found"
-            });
+            return res.status(404).json({ message: "Job not found" });
         }
 
-        // prevent duplicate apply
-        const { data: existingApplication } = await supabaseAdmin
+        const { data: existing } = await supabase
             .from("job_applications")
-            .select("*")
+            .select("id")
+            .eq("job_id", job_id)
             .eq("user_id", userId)
-            .eq("job_id", id)
             .maybeSingle();
 
-        if (existingApplication) {
+        if (existing) {
             return res.status(400).json({
-                error: "Already applied"
+                message: "You already applied to this job",
             });
         }
 
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await supabase
             .from("job_applications")
-            .insert([
-                {
-                    user_id: userId,
-                    job_id: id
-                }
-            ])
+            .insert({
+                job_id,
+                user_id: userId,
+                cover_letter,
+            })
             .select()
             .single();
 
-        if (error) {
-            return res.status(400).json({
-                error: error.message
-            });
-        }
+        if (error) return res.status(400).json({ error });
 
-        res.status(201).json({
-            message: "Applied successfully",
-            application: data
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
-
 };
 
-export const getMyApplications = async (req, res) => {
 
-    try {
+// ========================
+// GET JOB APPLICANTS (OWNER ONLY)
+// ========================
+export const getJobApplicants = async (req, res) => {
+    const { jobId } = req.params;
+    const userId = req.profile.id;
 
-        const userId = req.user.id;
+    const { data: job } = await supabase
+        .from("jobs")
+        .select("posted_by")
+        .eq("id", jobId)
+        .single();
 
-        const { data, error } = await supabaseAdmin
-            .from("job_applications")
-            .select(`
+    if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (job.posted_by !== userId) {
+        return res.status(403).json({
+            message: "You are not allowed to view applicants",
+        });
+    }
+
+    const { data, error } = await supabase
+        .from("job_applications")
+        .select(`
+            id,
+            job_id,
+            status,
+            created_at,
+            profiles (
                 id,
-                status,
-                created_at,
-                jobs (
-                    id,
-                    title,
-                    company,
-                    location,
-                    salary,
-                    job_type
-                )
-            `)
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false });
+                full_name,
+                role,
+                email,
+                avatar_url,
+                level
+            )
+        `)
+        .eq("job_id", jobId)
+        .order("created_at", { ascending: false });
 
-        if (error) {
-            return res.status(400).json({
-                error: error.message
-            });
-        }
+    if (error) return res.status(400).json({ error });
 
-        res.status(200).json(data);
-
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
-    }
-
+    res.json(data);
 };
 
+
+// ========================
+// UPDATE APPLICATION STATUS
+// ========================
+export const updateApplicationStatus = async (req, res) => {
+    const { applicationId } = req.params;
+    const { status } = req.body;
+    const userId = req.profile.id;
+
+    const { data: application } = await supabase
+        .from("job_applications")
+        .select(`*, jobs(*)`)
+        .eq("id", applicationId)
+        .single();
+
+    if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (application.jobs.posted_by !== userId) {
+        return res.status(403).json({ message: "Not allowed" });
+    }
+
+    const { data, error } = await supabase
+        .from("job_applications")
+        .update({ status })
+        .eq("id", applicationId)
+        .select()
+        .single();
+
+    if (error) return res.status(400).json({ error });
+
+    res.json(data);
+};
+
+
+// ========================
+// MY JOBS
+// ========================
+export const getMyJobs = async (req, res) => {
+    console.log("PROFILE ID:", req.profile.id);
+    const userId = req.profile.id;
+
+    const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("posted_by", userId)
+        .order("created_at", { ascending: false });
+
+    if (error) return res.status(400).json({ error });
+
+    res.json(data);
+};
+
+
+// ========================
+// MY APPLICATIONS (FIXED RESPONSE SHAPE)
+// ========================
+export const getMyApplications = async (req, res) => {
+    const userId = req.profile.id;
+
+    const { data, error } = await supabase
+        .from("job_applications")
+        .select(`
+            id,
+            status,
+            created_at,
+            job:jobs (
+                id,
+                title,
+                company,
+                location,
+                salary
+            )
+        `)
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+    if (error) return res.status(400).json({ error });
+
+    const formatted = data.map(app => ({
+        application_id: app.id,
+        status: app.status,
+        created_at: app.created_at,
+        job: app.job
+    }));
+
+    res.json(formatted);
+};
