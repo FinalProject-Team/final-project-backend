@@ -26,7 +26,7 @@ export const createSession = async (req, res) => {
                     instructor_id,
                     title,
                     description,
-                    meeting_link,
+                    meeting_link: meeting_link || null,
                     scheduled_at,
                     session_type
                 }
