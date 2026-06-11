@@ -1,5 +1,9 @@
 import { supabaseAdmin } from "../config/supabase.js";
 
+
+// =========================
+// 📩 SEND MESSAGE
+// =========================
 export const sendMessage = async (req, res) => {
     try {
         const { chatId } = req.params;
@@ -35,6 +39,10 @@ export const sendMessage = async (req, res) => {
     }
 };
 
+
+// =========================
+// 📩 GET MESSAGES (Chat screen)
+// =========================
 export const getMessages = async (req, res) => {
     const { chatId } = req.params;
 
@@ -49,4 +57,33 @@ export const getMessages = async (req, res) => {
     }
 
     return res.json(data);
+};
+
+
+// =========================
+// 💬 GET CHATS (Inbox)
+// =========================
+export const getChats = async (req, res) => {
+    try {
+        const userId = req.profile.id;
+
+        const { data, error } = await supabaseAdmin
+            .from("chats")
+            .select("*")
+            .or(`employer_id.eq.${userId},user_id.eq.${userId}`);
+
+        if (error) {
+            return res.status(500).json({
+                message: "Failed to fetch chats",
+                error: error.message,
+            });
+        }
+
+        return res.json(data);
+    } catch (err) {
+        return res.status(500).json({
+            message: "Server error",
+            error: err.message,
+        });
+    }
 };

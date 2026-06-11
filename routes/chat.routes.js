@@ -6,7 +6,7 @@ import {
 } from "../controllers/chat.controller.js";
 
 const router = express.Router();
-
+router.get("/", protect, getChats);
 router.post("/:chatId/messages", protect, sendMessage);
 router.get("/:chatId/messages", protect, getMessages);
 
