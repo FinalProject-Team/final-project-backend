@@ -1,28 +1,37 @@
 import { supabaseAdmin } from "../config/supabase.js";
 
 export const sendMessage = async (req, res) => {
+  try {
     const { chatId } = req.params;
-    const { message } = req.body;
+    const { content } = req.body;
 
     const senderId = req.profile.id;
 
     const { data, error } = await supabaseAdmin
-        .from("chat_messages")
-        .insert([
-            {
-                chat_id: chatId,
-                sender_id: senderId,
-                message,
-            },
-        ])
-        .select()
-        .single();
+      .from("chat_messages")
+      .insert([
+        {
+          role: "user",   // أو "employer" حسب النظام عندك
+          content: content,
+        },
+      ])
+      .select()
+      .single();
 
     if (error) {
-        return res.status(500).json({ message: "Failed to send message" });
+      return res.status(400).json({
+        message: "DB error",
+        error: error.message,
+      });
     }
 
     return res.status(201).json(data);
+  } catch (err) {
+    return res.status(500).json({
+      message: "Failed to send message",
+      error: err.message,
+    });
+  }
 };
 
 export const getMessages = async (req, res) => {
