@@ -252,6 +252,7 @@ export const getMyJobs = async (req, res) => {
 // ========================
 export const getMyApplications = async (req, res) => {
     const userId = req.profile.id;
+    // const userId = req.user.id;
 
     const { data, error } = await supabase
         .from("job_applications")
@@ -273,7 +274,8 @@ export const getMyApplications = async (req, res) => {
     if (error) return res.status(400).json({ error });
 
     const formatted = data.map(app => ({
-        application_id: app.id,
+        id: app.id,
+        job_id: app.job.id,
         status: app.status,
         created_at: app.created_at,
         job: app.job
