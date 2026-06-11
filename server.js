@@ -19,6 +19,12 @@ import notificationsRoutes from "./routes/notifications.routes.js";
 import instructorProfileRoutes from "./routes/instructorProfileRoutes.js";
 import jobsRoutes from "./routes/jobs.routes.js";
 
+import applicationsRoutes from "./routes/applications.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
+
+
+
+
 dotenv.config();
 
 const app = express();
@@ -65,6 +71,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/live-sessions", liveSessionsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/instructor/profile", instructorProfileRoutes);
+app.use("/applications", applicationsRoutes);
+
+app.use("/chats", chatRoutes);
 
 
 // Swagger
