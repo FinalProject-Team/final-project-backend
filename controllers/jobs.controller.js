@@ -136,41 +136,50 @@ export const getJobApplicants = async (req, res) => {
     const { jobId } = req.params;
     const userId = req.profile.id;
 
-    const { data: job } = await supabaseAdmin
+    // 1. التأكد إن الوظيفة موجودة وإنه صاحبها
+    const { data: job, error: jobError } = await supabaseAdmin
         .from("jobs")
         .select("posted_by")
         .eq("id", jobId)
         .single();
 
-    if (!job) return res.status(404).json({ message: "Job not found" });
-
-    if (job.posted_by !== userId) {
-        return res.status(403).json({ message: "You are not allowed to view applicants" });
+    if (jobError || !job) {
+        return res.status(404).json({ message: "Job not found" });
     }
 
+    if (job.posted_by !== userId) {
+        return res.status(403).json({
+            message: "You are not allowed to view applicants",
+        });
+    }
+
+    // 2. جلب المتقدمين
     const { data, error } = await supabaseAdmin
         .from("job_applications")
         .select(`
-            id,
-            job_id,
-            status,
-            created_at,
-            profiles (
-                id,
-                full_name,
-                role,
-                email,
-                avatar_url,
-                level
-            )
-        `)
+      id,
+      job_id,
+      status,
+      created_at,
+      cover_letter,
+      user:profiles (
+        id,
+        full_name,
+        role,
+        email,
+        avatar_url,
+        level
+      )
+    `)
         .eq("job_id", jobId)
         .order("created_at", { ascending: false });
 
-    if (error) return res.status(400).json({ error });
-    res.json(data);
-};
+    if (error) {
+        return res.status(400).json({ error });
+    }
 
+    return res.json(data || []);
+};
 // ========================
 // UPDATE APPLICATION STATUS
 // ========================
