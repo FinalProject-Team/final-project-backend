@@ -1,3 +1,5 @@
+import { supabaseAdmin } from "../config/supabase";
+
 export const sendMessage = async (req, res) => {
     const { chatId } = req.params;
     const { message } = req.body;
