@@ -136,30 +136,49 @@ const createInstructorProfile = async (userId) => {
 import jwt from "jsonwebtoken";
 
 export const login = async (req, res) => {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-    // check user from DB (حسب نظامك)
-    const user = await db.users.findOne({ email });
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Email and password are required"
+            });
+        }
 
-    if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
+        // Supabase auth login
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) {
+            return res.status(401).json({
+                message: error.message
+            });
+        }
+
+        // get profile
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", data.user.id)
+            .single();
+
+        // return token (لو عندك JWT system في الفرونت)
+        return res.json({
+            message: "Login successful",
+            token: data.session?.access_token,
+            user: {
+                ...data.user,
+                profile
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            error: error.message
+        });
     }
-
-    const token = jwt.sign(
-        {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-    );
-
-    res.json({
-        message: "Login successful",
-        token,
-        user,
-    });
 };
 /* ───────────────────────── GOOGLE LOGIN ───────────────────────── */
 
