@@ -3,23 +3,21 @@ import { supabaseAdmin } from "../config/supabase.js";
 export const sendMessage = async (req, res) => {
     try {
         const { chatId } = req.params;
-        const { content } = req.body;
+        const { message } = req.body;
 
-        console.log("chatId:", chatId);
-        console.log("content:", content);
+        const senderId = req.profile.id;
 
         const { data, error } = await supabaseAdmin
             .from("chat_messages")
             .insert([
                 {
-                    role: "user",
-                    content,
+                    chat_id: chatId,
+                    sender_id: senderId,
+                    message: message,
                 },
             ])
-            .select();
-
-        console.log("DATA:", data);
-        console.log("ERROR:", error);
+            .select()
+            .single();
 
         if (error) {
             return res.status(400).json({
@@ -30,7 +28,6 @@ export const sendMessage = async (req, res) => {
 
         return res.status(201).json(data);
     } catch (err) {
-        console.log("CATCH ERROR:", err);
         return res.status(500).json({
             message: "Failed to send message",
             error: err.message,
