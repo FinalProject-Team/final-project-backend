@@ -1,3 +1,5 @@
+import { supabaseAdmin } from "../config/supabase.js";
+
 export const acceptApplication = async (req, res) => {
     const { id } = req.params;
     const employerId = req.profile.id;
