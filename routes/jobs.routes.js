@@ -213,7 +213,7 @@ router.post(
 router.post(
     "/apply",
     protect,
-    allowRoles("student", "normal_user"),
+    allowRoles("student", "normal_user", "job_seeker"),
     applyToJob
 );
 
