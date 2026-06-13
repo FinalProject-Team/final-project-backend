@@ -1,8 +1,23 @@
 import { supabaseAdmin } from "../config/supabase.js";
 
+/* ───────────────────────── HELPERS ───────────────────────── */
+
+const isEmployerOrAdmin = (role) => {
+    return ["employer", "admin"].includes(role);
+};
+
+/* ───────────────────────── ACCEPT APPLICATION ───────────────────────── */
+
 export const acceptApplication = async (req, res) => {
     const { id } = req.params;
     const employerId = req.profile.id;
+
+    // 🔒 ROLE CHECK
+    if (!isEmployerOrAdmin(req.profile.role)) {
+        return res.status(403).json({
+            message: "Only employer or admin can accept applications",
+        });
+    }
 
     // 1. get application
     const { data: application, error: appError } = await supabaseAdmin
@@ -26,7 +41,7 @@ export const acceptApplication = async (req, res) => {
         return res.status(403).json({ message: "Not allowed" });
     }
 
-    // 3. update application status
+    // 3. update application
     const { error: updateError } = await supabaseAdmin
         .from("job_applications")
         .update({ status: "accepted" })
@@ -37,17 +52,13 @@ export const acceptApplication = async (req, res) => {
     }
 
     // 4. check existing chat
-    const { data: existingChat, error: chatCheckError } = await supabaseAdmin
+    const { data: existingChat } = await supabaseAdmin
         .from("chats")
         .select("*")
         .eq("employer_id", employerId)
         .eq("user_id", application.user_id)
         .eq("job_id", application.job_id)
         .maybeSingle();
-
-    if (chatCheckError) {
-        return res.status(500).json({ message: "Chat check failed" });
-    }
 
     let chat = existingChat;
 
@@ -78,36 +89,45 @@ export const acceptApplication = async (req, res) => {
     });
 };
 
+/* ───────────────────────── REJECT APPLICATION ───────────────────────── */
+
 export const rejectApplication = async (req, res) => {
     const { id } = req.params;
     const employerId = req.profile.id;
 
-    const { data: application, error: appError } = await supabaseAdmin
+    // 🔒 ROLE CHECK
+    if (!isEmployerOrAdmin(req.profile.role)) {
+        return res.status(403).json({
+            message: "Only employer or admin can reject applications",
+        });
+    }
+
+    const { data: application } = await supabaseAdmin
         .from("job_applications")
         .select("*")
         .eq("id", id)
         .single();
 
-    if (appError || !application) {
+    if (!application) {
         return res.status(404).json({ message: "Application not found" });
     }
 
-    const { data: job, error: jobError } = await supabaseAdmin
+    const { data: job } = await supabaseAdmin
         .from("jobs")
         .select("posted_by")
         .eq("id", application.job_id)
         .single();
 
-    if (jobError || !job || job.posted_by !== employerId) {
+    if (!job || job.posted_by !== employerId) {
         return res.status(403).json({ message: "Not allowed" });
     }
 
-    const { error: updateError } = await supabaseAdmin
+    const { error } = await supabaseAdmin
         .from("job_applications")
         .update({ status: "rejected" })
         .eq("id", id);
 
-    if (updateError) {
+    if (error) {
         return res.status(500).json({ message: "Failed to reject application" });
     }
 
@@ -116,10 +136,19 @@ export const rejectApplication = async (req, res) => {
     });
 };
 
+/* ───────────────────────── GET APPLICATIONS ───────────────────────── */
+
 export const getApplications = async (req, res) => {
     const employerId = req.profile.id;
 
-    // 1. هات الوظايف بتاعة الـ employer
+    // 🔒 ROLE CHECK
+    if (!isEmployerOrAdmin(req.profile.role)) {
+        return res.status(403).json({
+            message: "Only employer or admin can view applications",
+        });
+    }
+
+    // 1. get employer jobs
     const { data: jobs, error: jobsError } = await supabaseAdmin
         .from("jobs")
         .select("id")
@@ -129,9 +158,14 @@ export const getApplications = async (req, res) => {
         return res.status(500).json({ message: "Failed to fetch jobs" });
     }
 
-    const jobIds = jobs.map(job => job.id);
+    const jobIds = jobs.map((job) => job.id);
 
-    // 2. هات الـ applications بتاعة الوظايف دي
+    // 🔥 FIX: empty jobs edge case
+    if (!jobIds.length) {
+        return res.json([]);
+    }
+
+    // 2. get applications
     const { data: applications, error } = await supabaseAdmin
         .from("job_applications")
         .select("*")
@@ -142,5 +176,5 @@ export const getApplications = async (req, res) => {
         return res.status(500).json({ message: "Failed to fetch applications" });
     }
 
-    return res.json(applications);
+    return res.json(applications || []);
 };
