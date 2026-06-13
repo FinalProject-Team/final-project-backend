@@ -160,8 +160,16 @@ export const applyToJob = async (req, res) => {
 
     try {
         // 🔒 ROLE CHECK
-        if (req.profile.role !== "student") {
-            return res.status(403).json({ message: "Only students can apply" });
+        // if (req.profile.role !== "student") {
+        //     return res.status(403).json({ message: "Only students can apply" });
+        // }
+
+        const allowedRoles = ["student", "job_seeker", "admin"];
+
+        if (!allowedRoles.includes(req.profile.role)) {
+            return res.status(403).json({
+                message: "You are not allowed to apply for jobs"
+            });
         }
 
         // 1. Verify job exists
