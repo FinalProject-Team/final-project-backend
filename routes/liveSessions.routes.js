@@ -3,7 +3,9 @@ import {
     createSession,
     getSessions,
     getSessionById,
-    getMyLiveSessions
+    getMyLiveSessions,
+    updateSession,
+    deleteSession
 } from "../controllers/liveSessions.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
@@ -125,5 +127,83 @@ router.get("/", getSessions);
  *         description: Not found
  */
 router.get("/:id", getSessionById);
+
+
+
+/**
+ * @swagger
+ * /api/live-sessions/{id}:
+ *   put:
+ *     summary: Update a live session
+ *     tags: [Live Sessions]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               meeting_link:
+ *                 type: string
+ *               scheduled_at:
+ *                 type: string
+ *               session_type:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Session updated successfully
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not found
+ */
+router.put(
+    "/:id",
+    protect,
+    authorize("admin", "instructor"),
+    updateSession
+);
+
+
+/**
+ * @swagger
+ * /api/live-sessions/{id}:
+ *   delete:
+ *     summary: Delete a live session
+ *     tags: [Live Sessions]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Session deleted successfully
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not found
+ */
+router.delete(
+    "/:id",
+    protect,
+    authorize("admin", "instructor"),
+    deleteSession
+);
 
 export default router;

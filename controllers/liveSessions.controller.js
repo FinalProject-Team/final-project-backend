@@ -172,3 +172,108 @@ export const getMyLiveSessions = async (req, res) => {
         });
     }
 };
+
+
+export const deleteSession = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        const role = req.user.role;
+
+        // 1. get session
+        const { data: session, error } = await supabaseAdmin
+            .from("live_sessions")
+            .select("instructor_id")
+            .eq("id", id)
+            .single();
+
+        if (error || !session) {
+            return res.status(404).json({
+                message: "Session not found"
+            });
+        }
+
+        // 2. authorization check
+        if (role !== "admin" && session.instructor_id !== userId) {
+            return res.status(403).json({
+                message: "Not allowed to delete this session"
+            });
+        }
+
+        // 3. delete
+        const { error: deleteError } = await supabaseAdmin
+            .from("live_sessions")
+            .delete()
+            .eq("id", id);
+
+        if (deleteError) {
+            return res.status(400).json({
+                message: deleteError.message
+            });
+        }
+
+        return res.json({
+            message: "Session deleted successfully"
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
+};
+
+
+export const updateSession = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        const role = req.user.role;
+
+        const updates = req.body;
+
+        // 1. get session
+        const { data: session, error } = await supabaseAdmin
+            .from("live_sessions")
+            .select("instructor_id")
+            .eq("id", id)
+            .single();
+
+        if (error || !session) {
+            return res.status(404).json({
+                message: "Session not found"
+            });
+        }
+
+        // 2. authorization
+        if (role !== "admin" && session.instructor_id !== userId) {
+            return res.status(403).json({
+                message: "Not allowed to update this session"
+            });
+        }
+
+        // 3. update
+        const { data, error: updateError } = await supabaseAdmin
+            .from("live_sessions")
+            .update(updates)
+            .eq("id", id)
+            .select()
+            .single();
+
+        if (updateError) {
+            return res.status(400).json({
+                message: updateError.message
+            });
+        }
+
+        return res.json({
+            message: "Session updated successfully",
+            data
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
+};
