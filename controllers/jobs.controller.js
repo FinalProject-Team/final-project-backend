@@ -35,20 +35,70 @@ export const getJobs = async (req, res) => {
 // ========================
 // CREATE JOB
 // ========================
+// export const createJob = async (req, res) => {
+//     try {
+//         const userId = req.profile.id;
+
+//         // 🔒 ROLE CHECK
+//         if (req.profile.role !== "admin") {
+//             return res.status(403).json({ message: "Only admin can create jobs" });
+//         }
+
+//         const { title, company, location, salary, description, job_type, skills, budget } = req.body;
+
+//         // 🔒 VALIDATION
+//         if (!title || !company || !location) {
+//             return res.status(400).json({ message: "Missing required fields" });
+//         }
+
+//         const { data, error } = await supabase
+//             .from("jobs")
+//             .insert([
+//                 {
+//                     title,
+//                     company,
+//                     location,
+//                     salary,
+//                     description,
+//                     job_type,
+//                     skills,
+//                     budget,
+//                     posted_by: userId
+//                 }
+//             ])
+//             .select()
+//             .single();
+
+//         if (error) {
+//             console.log("CREATE JOB ERROR:", error);
+//             return res.status(400).json({ error: error.message });
+//         }
+
+//         return res.status(201).json(data);
+
+//     } catch (err) {
+//         return res.status(500).json({ error: err.message });
+//     }
+// };
+
 export const createJob = async (req, res) => {
     try {
         const userId = req.profile.id;
+        const role = req.profile.role;
 
         // 🔒 ROLE CHECK
-        if (req.profile.role !== "admin") {
-            return res.status(403).json({ message: "Only admin can create jobs" });
+        if (!["admin", "employer"].includes(role)) {
+            return res.status(403).json({
+                message: "Only admin or employer can create jobs"
+            });
         }
 
         const { title, company, location, salary, description, job_type, skills, budget } = req.body;
 
-        // 🔒 VALIDATION
         if (!title || !company || !location) {
-            return res.status(400).json({ message: "Missing required fields" });
+            return res.status(400).json({
+                message: "Missing required fields"
+            });
         }
 
         const { data, error } = await supabase
@@ -63,14 +113,14 @@ export const createJob = async (req, res) => {
                     job_type,
                     skills,
                     budget,
-                    posted_by: userId
+                    posted_by: userId,
+                    posted_by_role: role   // 👈 مهم جدًا
                 }
             ])
             .select()
             .single();
 
         if (error) {
-            console.log("CREATE JOB ERROR:", error);
             return res.status(400).json({ error: error.message });
         }
 
@@ -262,6 +312,7 @@ export const updateApplicationStatus = async (req, res) => {
 // MY JOBS
 // ========================
 export const getMyJobs = async (req, res) => {
+    console.log("GET MY JOBS HIT");
     const userId = req.profile.id;
 
     const { data, error } = await supabaseAdmin

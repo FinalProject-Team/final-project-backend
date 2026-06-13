@@ -16,21 +16,35 @@ export const protect = async (req, res, next) => {
             return res.status(401).json({ message: "Invalid token" });
         }
 
-        req.user = data.user;
-
         const { data: profile } = await supabaseAdmin
             .from("profiles")
             .select("*")
             .eq("id", data.user.id)
             .maybeSingle();
 
+        if (!profile) {
+            return res.status(403).json({
+                message: "User profile not found - please complete signup"
+            });
+        }
+
+        // unified user object (single source for RBAC)
+        req.user = {
+            id: data.user.id,
+            email: data.user.email,
+            role: profile.role,
+            has_paid: profile.has_paid
+        };
+
+        // optional full profile access if needed
         req.profile = profile;
 
         next();
+
     } catch (err) {
         return res.status(401).json({
             message: "Unauthorized",
-            error: err.message,
+            error: process.env.NODE_ENV === "development" ? err.message : undefined
         });
     }
 };

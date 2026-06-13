@@ -38,6 +38,12 @@ const router = express.Router();
  *               items:
  *                 type: object
  */
+// router.get(
+//     "/my/jobs",
+//     protect,
+//     allowRoles("job_seeker", "admin"),
+//     getMyJobs
+// );
 router.get(
     "/my/jobs",
     protect,
@@ -66,7 +72,7 @@ router.get(
 router.get(
     "/my/applications",
     protect,
-    allowRoles("user", "student"),
+    allowRoles("student", "normal_user"),
     getMyApplications
 );
 
@@ -158,10 +164,17 @@ router.get("/:jobId", getJobById);
  *             schema:
  *               type: object
  */
+// router.post(
+//     "/",
+//     protect,
+//     allowRoles("job_seeker", "admin"),
+//     createJob
+// );
+
 router.post(
     "/",
     protect,
-    allowRoles("employer", "admin"),
+    allowRoles("admin", "employer"),
     createJob
 );
 
@@ -200,7 +213,7 @@ router.post(
 router.post(
     "/apply",
     protect,
-    allowRoles("user", "student"),
+    allowRoles("student", "normal_user"),
     applyToJob
 );
 
@@ -232,7 +245,7 @@ router.post(
 router.get(
     "/:jobId/applicants",
     protect,
-    allowRoles("employer", "admin"),
+    allowRoles("job_seeker", "admin"),
     getJobApplicants
 );
 
@@ -266,7 +279,7 @@ router.get(
 router.patch(
     "/applications/:applicationId/status",
     protect,
-    allowRoles("employer", "admin"),
+    allowRoles("job_seeker", "admin"),
     updateApplicationStatus
 );
 
