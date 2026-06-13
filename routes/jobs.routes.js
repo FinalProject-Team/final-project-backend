@@ -11,6 +11,7 @@ import {
 } from "../controllers/jobs.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
+import { allowRoles } from "../middlewares/rbac.middleware.js";
 
 const router = express.Router();
 
@@ -37,8 +38,12 @@ const router = express.Router();
  *               items:
  *                 type: object
  */
-router.get("/my/jobs", protect, getMyJobs);
-
+router.get(
+    "/my/jobs",
+    protect,
+    allowRoles("employer", "admin"),
+    getMyJobs
+);
 
 /**
  * @swagger
@@ -58,7 +63,12 @@ router.get("/my/jobs", protect, getMyJobs);
  *               items:
  *                 type: object
  */
-router.get("/my/applications", protect, getMyApplications);
+router.get(
+    "/my/applications",
+    protect,
+    allowRoles("user", "student"),
+    getMyApplications
+);
 
 
 // =====================================================
@@ -148,7 +158,12 @@ router.get("/:jobId", getJobById);
  *             schema:
  *               type: object
  */
-router.post("/", protect, createJob);
+router.post(
+    "/",
+    protect,
+    allowRoles("employer", "admin"),
+    createJob
+);
 
 
 // =====================================================
@@ -182,7 +197,12 @@ router.post("/", protect, createJob);
  *             schema:
  *               type: object
  */
-router.post("/apply", protect, applyToJob);
+router.post(
+    "/apply",
+    protect,
+    allowRoles("user", "student"),
+    applyToJob
+);
 
 
 /**
@@ -209,7 +229,12 @@ router.post("/apply", protect, applyToJob);
  *               items:
  *                 type: object
  */
-router.get("/:jobId/applicants", protect, getJobApplicants);
+router.get(
+    "/:jobId/applicants",
+    protect,
+    allowRoles("employer", "admin"),
+    getJobApplicants
+);
 
 
 /**
@@ -220,12 +245,6 @@ router.get("/:jobId/applicants", protect, getJobApplicants);
  *     tags: [Applications]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: applicationId
- *         required: true
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -247,8 +266,8 @@ router.get("/:jobId/applicants", protect, getJobApplicants);
 router.patch(
     "/applications/:applicationId/status",
     protect,
+    allowRoles("employer", "admin"),
     updateApplicationStatus
 );
-
 
 export default router;
