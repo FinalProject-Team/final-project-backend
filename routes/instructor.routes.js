@@ -7,7 +7,8 @@ import {
     getInstructorDashboard,
     getInstructorCourses,
     getInstructorCoursesSummary,
-    getInstructorActivity
+    getInstructorActivity,
+    getInstructorLiveSessions
 } from "../controllers/instructor.controller.js";
 
 
