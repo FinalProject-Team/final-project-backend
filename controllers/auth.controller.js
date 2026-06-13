@@ -10,7 +10,8 @@ export const register = async (req, res) => {
             full_name,
             phone,
             confirmPassword,
-            role = "student"
+            // role = "student"
+            role = "job_seeker"
         } = req.body;
 
         if (!email || !password || !full_name || !phone || !confirmPassword) {
