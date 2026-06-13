@@ -144,4 +144,42 @@ router.get(
  */
 router.get("/activity", protect, getInstructorActivity);
 
+
+/**
+ * @swagger
+ * /api/live-sessions/instructor:
+ *   get:
+ *     summary: Get instructor live sessions
+ *     description: Retrieve all live sessions created by the logged-in instructor
+ *     tags:
+ *       - Live Sessions
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Instructor live sessions fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Instructor live sessions fetched successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       403:
+ *         description: Missing instructor profile
+ *       500:
+ *         description: Server error
+ */
+router.get(
+    "/live-sessions/instructor",
+    protect,
+    authorize("instructor"),
+    getInstructorLiveSessions
+);
+
 export default router;

@@ -168,3 +168,33 @@ export const getInstructorActivity = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
+
+
+/* =========================
+   LIVE SESSIONS
+========================= */
+export const getInstructorLiveSessions = async (req, res) => {
+    try {
+        const instructorId = req.profile?.id;
+
+        if (!instructorId) {
+            return res.status(403).json({ error: "Missing instructor profile" });
+        }
+
+        const { data, error } = await supabase
+            .from("live_sessions")
+            .select("*")
+            .eq("instructor_id", instructorId)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        return res.json({
+            message: "Instructor live sessions fetched successfully",
+            data
+        });
+
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
