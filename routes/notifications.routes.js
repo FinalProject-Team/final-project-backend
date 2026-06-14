@@ -1,9 +1,9 @@
 import express from "express";
 import {
-    getMyNotifications,
-    markAsRead,
-    markAllAsRead,
-    getUnreadCount,
+   getMyNotifications,
+   markAsRead,
+   markAllAsRead,
+   getUnreadCount
 } from "../controllers/notifications.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
@@ -70,6 +70,15 @@ router.get("/unread-count", protect, getUnreadCount);
  *         description: Notification marked as read
  */
 router.put("/:id/read", protect, markAsRead);
+
+
+
+
+
+
+
+
+
 
 /* =========================================
    MARK ALL AS READ
