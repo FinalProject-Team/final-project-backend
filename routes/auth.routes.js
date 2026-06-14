@@ -26,44 +26,57 @@ console.log("AUTH ROUTES LOADED");
 /* ───────────────────────── REGISTER ───────────────────────── */
 
 /**
- * @swagger
- * /api/auth/register:
- *   post:
- *     summary: Register new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *               - confirmPassword
- *               - full_name
- *               - phone
- *             properties:
- *               email:
- *                 type: string
- *                 example: hager@gmail.com
- *               password:
- *                 type: string
- *                 example: 123456
- *               confirmPassword:
- *                 type: string
- *                 example: 123456
- *               full_name:
- *                 type: string
- *                 example: Hager Nady
- *               phone:
- *                 type: string
- *                 example: "01000000000"
- *               role:
- *                 type: string
- *                 example: job_seeker
- * */
- 
+* @swagger
+* /api/auth/register:
+*   post:
+*     summary: Register new user
+*     tags: [Auth]
+*     requestBody:
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             required:
+*               - email
+*               - password
+*               - confirmPassword
+*               - full_name
+*               - phone
+*             properties:
+*               email:
+*                 type: string
+*                 example: hager@gmail.com
+*               password:
+*                 type: string
+*                 example: 123456
+*               confirmPassword:
+*                 type: string
+*                 example: 123456
+*               full_name:
+*                 type: string
+*                 example: Hager Nady
+*               phone:
+*                 type: string
+*                 example: "01000000000"
+*               role:
+*                 type: string
+*                 example: job_seeker
+*     responses:
+*       200:
+*         description: User registered successfully
+*         content:
+*           application/json:
+*             schema:
+*               type: object
+*               properties:
+*                 user:
+*                   type: object
+*                 token:
+*                   type: string
+*                 message:
+*                   type: string
+*/
 router.post("/register", register);
 
 /* ───────────────────────── LOGIN ───────────────────────── */
