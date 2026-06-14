@@ -15,7 +15,7 @@ const router = express.Router();
 ========================================= */
 /**
  * @swagger
- * /notifications:
+ * /api/notifications:
  *   get:
  *     summary: Get all notifications for logged-in user
  *     tags: [Notifications]
@@ -32,7 +32,7 @@ router.get("/", protect, getMyNotifications);
 ========================================= */
 /**
  * @swagger
- * /notifications/unread-count:
+ * /api/notifications/unread-count:
  *   get:
  *     summary: Get unread notifications count
  *     tags: [Notifications]
@@ -53,7 +53,7 @@ router.get("/unread-count", protect, getUnreadCount);
 ========================================= */
 /**
  * @swagger
- * /notifications/{id}/read:
+ * /api/notifications/{id}/read:
  *   put:
  *     summary: Mark a single notification as read
  *     tags: [Notifications]
@@ -71,21 +71,12 @@ router.get("/unread-count", protect, getUnreadCount);
  */
 router.put("/:id/read", protect, markAsRead);
 
-
-
-
-
-
-
-
-
-
 /* =========================================
    MARK ALL AS READ
 ========================================= */
 /**
  * @swagger
- * /notifications/read-all:
+ * /api/notifications/read-all:
  *   put:
  *     summary: Mark all notifications as read
  *     tags: [Notifications]
