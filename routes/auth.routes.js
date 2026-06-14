@@ -38,25 +38,32 @@ console.log("AUTH ROUTES LOADED");
  *           schema:
  *             type: object
  *             required:
- *               - name
  *               - email
  *               - password
+ *               - confirmPassword
+ *               - full_name
+ *               - phone
  *             properties:
- *               name:
- *                 type: string
- *                 example: Hager
  *               email:
  *                 type: string
  *                 example: hager@gmail.com
  *               password:
  *                 type: string
  *                 example: 123456
- *     responses:
- *       201:
- *         description: User registered successfully
- *       400:
- *         description: Bad request
- */
+ *               confirmPassword:
+ *                 type: string
+ *                 example: 123456
+ *               full_name:
+ *                 type: string
+ *                 example: Hager Nady
+ *               phone:
+ *                 type: string
+ *                 example: "01000000000"
+ *               role:
+ *                 type: string
+ *                 example: job_seeker
+ * */
+ 
 router.post("/register", register);
 
 /* ───────────────────────── LOGIN ───────────────────────── */
