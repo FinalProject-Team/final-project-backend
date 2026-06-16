@@ -245,7 +245,7 @@ router.post(
 router.get(
     "/:jobId/applicants",
     protect,
-    allowRoles("job_seeker", "admin"),
+    allowRoles("job_seeker", "admin", "employer"),
     getJobApplicants
 );
 
