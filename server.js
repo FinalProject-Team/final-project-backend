@@ -21,6 +21,8 @@ import jobsRoutes from "./routes/jobs.routes.js";
 
 import applicationsRoutes from "./routes/applications.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
+import communityRoutes from "./routes/community.routes.js";
+
 
 
 
@@ -64,6 +66,8 @@ app.use("/api/instructor/profile", instructorProfileRoutes);
 app.use("/applications", applicationsRoutes);
 
 app.use("/chats", chatRoutes);
+
+app.use("/api/community", communityRoutes);
 
 
 // Swagger
