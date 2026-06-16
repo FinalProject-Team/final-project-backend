@@ -258,6 +258,15 @@ router.get(
  *     tags: [Applications]
  *     security:
  *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: applicationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the application
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -268,6 +277,7 @@ router.get(
  *               status:
  *                 type: string
  *                 example: accepted
+ *
  *     responses:
  *       200:
  *         description: Status updated
@@ -276,10 +286,11 @@ router.get(
  *             schema:
  *               type: object
  */
+
 router.patch(
     "/applications/:applicationId/status",
     protect,
-    allowRoles("job_seeker", "admin"),
+    allowRoles("admin", "employer"),
     updateApplicationStatus
 );
 
