@@ -174,7 +174,7 @@ router.get("/:jobId", getJobById);
 router.post(
     "/",
     protect,
-    allowRoles("admin", "employer"),
+    allowRoles("admin", "employer","student"),
     createJob
 );
 
